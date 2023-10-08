@@ -8,7 +8,6 @@ use crate::models::exchange::{
     CurrencyInfo, CurrencyPairRestriction, FavouritePairResponse, Market, NewOrder, NewOrderError,
     OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, Ticker,
 };
-use crate::richamster::common::AuthState::Unauthorized;
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::richamster::replace_placeholder;
 use crate::{prepare_request, process_response, send_request};
@@ -16,16 +15,9 @@ use reqwest::StatusCode;
 use secrecy::Secret;
 use url::Url;
 
+#[derive(Default)]
 pub struct Exchange {
     auth_state: AuthState,
-}
-
-impl Default for Exchange {
-    fn default() -> Self {
-        Self {
-            auth_state: Unauthorized,
-        }
-    }
 }
 
 impl Exchange {
@@ -102,9 +94,7 @@ impl Exchange {
     ) -> Result<Vec<CurrencyInfo>, RichamsterError> {
         let mut url = Api::Exchange(Currencies).full_url();
         if let Some(t) = token {
-            url = url.join(
-                format!("?abbreviation={}", <token::Token as Into<&str>>::into(t)).as_str(),
-            )?;
+            url = url.join(format!("?abbreviation={}", t.as_ref()).as_str())?;
         }
         let resp = prepare_request!(url, get)
             .compose(&self.auth_state)
@@ -220,6 +210,20 @@ impl Exchange {
                     response_string,
                 ))
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn create_default_exchange() {
+        let exchange: Exchange = Default::default();
+        match exchange.auth_state {
+            AuthState::Unauthorized => assert!(true),
+            _ => assert!(false),
         }
     }
 }

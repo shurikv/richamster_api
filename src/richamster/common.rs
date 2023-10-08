@@ -34,8 +34,9 @@ impl SecretKey {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum AuthState {
+    #[default]
     Unauthorized,
     JwtTokenAuth(JwtToken),
     ApiSecretKeyAuth(ApiKey, SecretKey),

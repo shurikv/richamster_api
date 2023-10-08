@@ -5,6 +5,7 @@ use crate::models::transfer::TransferQuery;
 use crate::prepare_request;
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use secrecy::Secret;
+use std::convert::AsRef;
 
 pub struct Transfer {
     auth_state: AuthState,
@@ -33,7 +34,7 @@ impl Transfer {
         let url = Api::Transfer(TransferApi::Transfer).full_url();
         let transfer_query = TransferQuery {
             amount: amount.to_string(),
-            currency: <Token as Into<&str>>::into(token).to_owned(),
+            currency: token.as_ref().to_owned(),
             to,
             pin_code,
         };

@@ -8,22 +8,14 @@ use crate::models::user::{
     OrdersFilter, TransactionsFilter, UserBalance, UserDetail, UserOrder, UserTransaction,
 };
 use crate::richamster::common;
-use crate::richamster::common::AuthState::Unauthorized;
 use crate::richamster::common::{AuthState, HeaderCompose};
 use crate::{prepare_request, process_response};
 use reqwest::StatusCode;
 use secrecy::Secret;
 
+#[derive(Default)]
 pub struct User {
     auth_state: AuthState,
-}
-
-impl Default for User {
-    fn default() -> Self {
-        Self {
-            auth_state: Unauthorized,
-        }
-    }
 }
 
 impl User {
@@ -53,9 +45,9 @@ impl User {
         currency: Option<token::Token>,
     ) -> Result<Vec<UserBalance>, RichamsterError> {
         let mut url = Api::User(Balances).full_url();
-        if let Some(c) = currency {
+        if let Some(token) = currency {
             url = url
-                .join(format!("?currency={}", <token::Token as Into<&str>>::into(c)).as_str())
+                .join(format!("?currency={}", token.as_ref()).as_str())
                 .unwrap();
         }
 
@@ -107,5 +99,19 @@ impl User {
             .await?;
 
         process_response!(resp, Vec<UserOrder>)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn create_default_user() {
+        let user: User = Default::default();
+        match user.auth_state {
+            AuthState::Unauthorized => assert!(true),
+            _ => assert!(false),
+        }
     }
 }

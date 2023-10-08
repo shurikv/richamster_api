@@ -1,22 +1,13 @@
 use enum_iterator::{all, Sequence};
 
 #[derive(Debug, Sequence, PartialEq)]
+#[repr(u8)]
 pub enum MenuItems {
-    Login,
-    UserDetails,
-    UserBalance,
-    Quit,
-}
-
-impl From<MenuItems> for usize {
-    fn from(value: MenuItems) -> Self {
-        match value {
-            MenuItems::Login => 1,
-            MenuItems::UserDetails => 2,
-            MenuItems::UserBalance => 3,
-            MenuItems::Quit => 4,
-        }
-    }
+    Login = 1,
+    UserDetails = 2,
+    UserBalance = 3,
+    UserTransactions = 4,
+    Quit = 5,
 }
 
 impl From<usize> for MenuItems {
@@ -25,6 +16,7 @@ impl From<usize> for MenuItems {
             1 => MenuItems::Login,
             2 => MenuItems::UserDetails,
             3 => MenuItems::UserBalance,
+            4 => MenuItems::UserTransactions,
             _ => MenuItems::Quit,
         }
     }
@@ -42,7 +34,8 @@ impl Menu {
                 MenuItems::Login => "1. Login",
                 MenuItems::UserDetails => "2. User detail",
                 MenuItems::UserBalance => "3. User balance",
-                MenuItems::Quit => "4. Quit",
+                MenuItems::UserTransactions => "4. User transactions",
+                MenuItems::Quit => "5. Quit",
             };
             println!("{:?}", output_string);
         }
@@ -55,6 +48,7 @@ impl Menu {
             MenuItems::Login => "Login",
             MenuItems::UserDetails => "User detail",
             MenuItems::UserBalance => "User balance",
+            MenuItems::UserTransactions => "User transactions",
             MenuItems::Quit => "",
         };
         println!("{:^35}", title);

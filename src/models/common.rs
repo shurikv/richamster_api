@@ -1,7 +1,7 @@
 use crate::models::common::TransactionType::{
     Dividends, Referral, Replenish, Transfer, Unknown, Withdrawal,
 };
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer};
 use serde_derive::Serialize;
 use std::fmt;
@@ -76,20 +76,18 @@ impl From<TransactionType> for i32 {
     }
 }
 
-pub fn timestamp_deserialize<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
+pub fn timestamp_deserialize<'de, D>(deserializer: D) -> Result<DateTime<FixedOffset>, D::Error>
 where
     D: Deserializer<'de>,
 {
     let timestamp: String = Deserialize::deserialize(deserializer)?;
-    let datetime = Utc
-        .datetime_from_str(&timestamp, "%s")
-        .map_err(serde::de::Error::custom)?;
+    let datetime = DateTime::parse_from_str(&timestamp, "%s").map_err(serde::de::Error::custom)?;
     Ok(datetime)
 }
 
 pub fn option_timestamp_deserialize<'de, D>(
     deserializer: D,
-) -> Result<Option<DateTime<Utc>>, D::Error>
+) -> Result<Option<DateTime<FixedOffset>>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -97,8 +95,7 @@ where
     if timestamp.is_none() {
         return Ok(None);
     }
-    let datetime = Utc
-        .datetime_from_str(&timestamp.unwrap(), "%s")
-        .map_err(serde::de::Error::custom)?;
+    let datetime =
+        DateTime::parse_from_str(&timestamp.unwrap(), "%s").map_err(serde::de::Error::custom)?;
     Ok(Some(datetime))
 }

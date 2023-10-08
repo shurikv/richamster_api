@@ -1,8 +1,9 @@
 use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
+use strum_macros::AsRefStr;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, AsRefStr)]
 pub enum Token {
     FSH,
     TON,
@@ -74,42 +75,6 @@ impl FromStr for Token {
     }
 }
 
-impl From<Token> for &str {
-    fn from(value: Token) -> Self {
-        match value {
-            Token::FSH => "FSH",
-            Token::TON => "TON",
-            Token::UAHT => "UAHT",
-            Token::AAVE => "AAVE",
-            Token::HCK => "HCK",
-            Token::TRX => "TRX",
-            Token::CRO => "CRO",
-            Token::VQR => "VQR",
-            Token::SHIB => "SHIB",
-            Token::TLR => "TLR",
-            Token::LINK => "LINK",
-            Token::MATIC => "MATIC",
-            Token::UNI => "UNI",
-            Token::USDC => "USDC",
-            Token::BAT => "BAT",
-            Token::USDT => "USDT",
-            Token::RCH => "RCH",
-            Token::BOX => "BOX",
-            Token::XMR => "XMR",
-            Token::DASH => "DASH",
-            Token::KUB => "KUB",
-            Token::WAVES => "WAVES",
-            Token::ADA => "ADA",
-            Token::ETH => "ETH",
-            Token::DOGE => "DOGE",
-            Token::KRB => "KRB",
-            Token::UAH => "UAH",
-            Token::BTC => "BTC",
-            Token::LTC => "LTC",
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum TokenError {
     InvalidToken(String),
@@ -150,22 +115,13 @@ impl FromStr for CurrencyPair {
 
 impl From<CurrencyPair> for String {
     fn from(value: CurrencyPair) -> Self {
-        format!(
-            "{}/{}",
-            <Token as Into<&str>>::into(value.0[0]),
-            <Token as Into<&str>>::into(value.0[1])
-        )
+        format!("{}/{}", value.0[0].as_ref(), value.0[1].as_ref())
     }
 }
 
 impl Display for CurrencyPair {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}/{}",
-            <Token as Into<&str>>::into(self.0[0]),
-            <Token as Into<&str>>::into(self.0[1])
-        )
+        write!(f, "{}/{}", self.0[0].as_ref(), self.0[1].as_ref())
     }
 }
 
@@ -176,7 +132,7 @@ mod test {
     #[test]
     fn token_conversion() {
         let token: Token = Token::ADA;
-        let token_str: &str = token.into();
+        let token_str: &str = token.as_ref();
         assert_eq!(token_str, "ADA");
         let token2: Token = token_str.parse().unwrap();
         assert_eq!(token2, Token::ADA);

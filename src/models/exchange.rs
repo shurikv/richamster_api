@@ -1,6 +1,6 @@
 use crate::api::token::CurrencyPair;
 use crate::models::common::OrderType;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::Deserialize;
 use serde_derive::Serialize;
 use std::fmt::{Display, Formatter};
@@ -101,9 +101,9 @@ pub struct OrdersHistory {
 pub struct OrderHistoryRecord {
     pk: i32,
     #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
-    created_at: DateTime<Utc>,
+    created_at: DateTime<FixedOffset>,
     #[serde(deserialize_with = "crate::models::common::option_timestamp_deserialize")]
-    closed_at: Option<DateTime<Utc>>,
+    closed_at: Option<DateTime<FixedOffset>>,
     side: OrderType,
     volume: String,
     unit_price: String,

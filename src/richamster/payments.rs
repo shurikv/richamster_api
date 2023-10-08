@@ -1,6 +1,3 @@
-use reqwest::StatusCode;
-use secrecy::Secret;
-
 use crate::api::token::Token;
 use crate::api::{Api, PaymentsApi, RequestPath};
 use crate::errors::RichamsterError;
@@ -11,6 +8,9 @@ use crate::models::payments::{
 use crate::prepare_request;
 use crate::richamster::common::{AuthState, HeaderCompose};
 use crate::richamster::{common, replace_placeholder};
+use reqwest::StatusCode;
+use secrecy::Secret;
+use std::convert::AsRef;
 
 pub struct Payments {
     auth_state: AuthState,
@@ -37,11 +37,7 @@ impl Payments {
     pub async fn replenish_info(&self, token: Token) -> Result<ReplenishInfo, RichamsterError> {
         let mut url = Api::Payments(PaymentsApi::ReplenishInfo).full_url();
         let path_segments: Vec<&str> = url.path_segments().unwrap().collect();
-        let new_path = replace_placeholder(
-            path_segments,
-            Into::<&str>::into(token).to_owned(),
-            "{currency}",
-        );
+        let new_path = replace_placeholder(path_segments, token.as_ref().to_owned(), "{currency}");
         url.set_path(new_path.as_str());
 
         let resp = prepare_request!(url, get)
@@ -65,11 +61,7 @@ impl Payments {
     pub async fn withdraw_info(&self, token: Token) -> Result<WithdrawInfo, RichamsterError> {
         let mut url = Api::Payments(PaymentsApi::WithdrawInfo).full_url();
         let path_segments: Vec<&str> = url.path_segments().unwrap().collect();
-        let new_path = replace_placeholder(
-            path_segments,
-            Into::<&str>::into(token).to_owned(),
-            "{currency}",
-        );
+        let new_path = replace_placeholder(path_segments, token.as_ref().to_owned(), "{currency}");
         url.set_path(new_path.as_str());
 
         let resp = prepare_request!(url, get)
@@ -99,11 +91,7 @@ impl Payments {
     ) -> Result<WithdrawResponse, RichamsterError> {
         let mut url = Api::Payments(PaymentsApi::Withdraw).full_url();
         let path_segments: Vec<&str> = url.path_segments().unwrap().collect();
-        let new_path = replace_placeholder(
-            path_segments,
-            Into::<&str>::into(token).to_owned(),
-            "{currency}",
-        );
+        let new_path = replace_placeholder(path_segments, token.as_ref().to_owned(), "{currency}");
         url.set_path(new_path.as_str());
 
         let withdraw = Withdraw {

@@ -1,6 +1,6 @@
 use crate::api::token::{CurrencyPair, Token};
 use crate::models::common::{Currency, OrderType, TransactionStatus, TransactionType};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer};
 use serde_derive::Serialize;
 
@@ -8,7 +8,7 @@ use serde_derive::Serialize;
 #[serde(untagged)]
 pub enum ActiveBalanceType {
     String(String),
-    Float(f64)
+    Float(f64),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -39,9 +39,9 @@ pub struct UserDetail {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct UserTransaction {
     #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
-    pub created_at: DateTime<Utc>,
+    pub created_at: DateTime<FixedOffset>,
     #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
-    pub closed_at: DateTime<Utc>,
+    pub closed_at: DateTime<FixedOffset>,
     pub status: TransactionStatus,
     #[serde(rename = "type")]
     #[serde(deserialize_with = "transaction_type_deserialize")]
@@ -85,7 +85,7 @@ impl TransactionsFilter {
     pub fn compose_url(&self) -> String {
         let mut result: Vec<String> = Vec::new();
         if let Some(token) = &self.currency {
-            result.push(format!("currency={}", <Token as Into<&str>>::into(*token)));
+            result.push(format!("currency={}", token.as_ref()));
         }
         if let Some(transaction_type) = &self.transaction_type {
             result.push(format!(

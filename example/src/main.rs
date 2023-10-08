@@ -3,6 +3,7 @@ mod menu;
 use crate::menu::{Menu, MenuItems};
 use richamster_api::errors::RichamsterError;
 use richamster_api::models::authentication::{LoginResponse, OtpLoginResponse};
+use richamster_api::models::user::TransactionsFilter;
 use richamster_api::richamster::auth::Auth;
 use richamster_api::richamster::user::User;
 use std::fmt::Error;
@@ -70,6 +71,9 @@ async fn main() -> Result<(), Error> {
             MenuItems::UserBalance => {
                 let _ = show_user_balance(&token_storage).await;
             }
+            MenuItems::UserTransactions => {
+                let _ = show_user_transactions(&token_storage).await;
+            }
             MenuItems::Quit => break,
         }
     }
@@ -136,6 +140,23 @@ async fn show_user_balance(token_storage: &JwtTokenStorage) -> Result<(), Richam
             balance.currency.abbreviation, balance.active_balance, balance.balance
         );
     }
+    Ok(())
+}
+
+async fn show_user_transactions(token_storage: &JwtTokenStorage) -> Result<(), RichamsterError> {
+    if token_storage.token.is_none() {
+        return Err(RichamsterError::UnauthorizedAccess);
+    }
+    let user = User::with_jwt_token(token_storage.token.clone().unwrap());
+    let result = user
+        .transactions_list(TransactionsFilter {
+            currency: None,
+            transaction_type: None,
+            closed_at_gte: None,
+            closed_at_lte: None,
+        })
+        .await?;
+    println!("{:?}", result);
     Ok(())
 }
 
