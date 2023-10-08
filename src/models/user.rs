@@ -3,6 +3,7 @@ use crate::models::common::{Currency, OrderType, TransactionStatus, TransactionT
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer};
 use serde_derive::Serialize;
+use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[serde(untagged)]
@@ -34,6 +35,35 @@ pub struct UserDetail {
     pub phone: Option<String>,
     pub email: String,
     pub fee: Option<f32>,
+}
+
+impl Display for UserDetail {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Username: {:?}", self.username)?;
+        if let Some(first_name) = &self.first_name {
+            writeln!(f, "First name: {}", first_name)?;
+        }
+        if let Some(middle_name) = &self.middle_name {
+            writeln!(f, "Middle name: {}", middle_name)?;
+        }
+        if let Some(last_name) = &self.last_name {
+            writeln!(f, "Last name: {}", last_name)?;
+        }
+        if let Some(dices) = &self.dices {
+            writeln!(f, "Dices: {}", dices)?;
+        }
+        if let Some(role) = &self.role {
+            writeln!(f, "Role: {}", role)?;
+        }
+        if let Some(phone) = &self.phone {
+            writeln!(f, "Phone: {}", phone)?;
+        }
+        writeln!(f, "Email: {}", &self.email)?;
+        if let Some(fee) = &self.fee {
+            writeln!(f, "Fee: {}", fee)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]

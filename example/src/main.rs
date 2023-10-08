@@ -121,10 +121,7 @@ async fn show_user_details(token_storage: &JwtTokenStorage) -> Result<(), Richam
     }
     let user = User::with_jwt_token(token_storage.token.clone().unwrap());
     let result = user.detail_info().await?;
-    println!("username: {}", result.username);
-    println!("email: {}", result.email);
-    println!("role: {:?}", result.role);
-    println!("fee: {:?}", result.fee);
+    println!("{}", result);
     Ok(())
 }
 
