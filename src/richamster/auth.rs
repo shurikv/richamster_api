@@ -1,13 +1,11 @@
-use crate::api::AuthenticationApi::TwoFactorLogin;
-use crate::api::{Api, AuthenticationApi, RequestPath};
+use crate::api::{Api, AuthenticationApi, RequestData, RequestPath};
 use crate::errors::RichamsterError;
 use crate::models::authentication::LoginResponse::{Jwt, RequiresTwoFactor};
 use crate::models::authentication::{
     Login, LoginResponse, LoginResponseError, NonFieldsError, OtpLogin, OtpLoginResponse,
     OtpLoginResponseError, RegisterUser, RegisterUserError, RegisterUserResponse, TokenData,
 };
-use crate::send_request;
-use reqwest::StatusCode;
+use reqwest::{Client, StatusCode};
 
 pub struct Auth;
 
@@ -17,9 +15,12 @@ impl Auth {
         password: impl AsRef<str>,
     ) -> Result<LoginResponse, RichamsterError> {
         let login = Login::new(username.as_ref(), password.as_ref());
-        let url = Api::Authentication(AuthenticationApi::Login).full_url();
-        let payload = serde_json::to_string(&login)?;
-        let resp = send_request!(url, payload, post);
+        let RequestData(url, method) = Api::Authentication(AuthenticationApi::Login).request_data();
+        let resp = Client::new()
+            .request(method, url)
+            .json(&login)
+            .send()
+            .await?;
         match resp.status() {
             StatusCode::OK => Ok(RequiresTwoFactor(true)),
             StatusCode::CREATED => {
@@ -41,12 +42,13 @@ impl Auth {
     pub async fn register_user(
         user_creation: RegisterUser,
     ) -> Result<RegisterUserResponse, RichamsterError> {
-        let payload = serde_json::to_string(&user_creation)?;
-        let resp = send_request!(
-            Api::Authentication(AuthenticationApi::Register).full_url(),
-            payload,
-            post
-        );
+        let RequestData(url, method) =
+            Api::Authentication(AuthenticationApi::Register).request_data();
+        let resp = Client::new()
+            .request(method, url)
+            .json(&user_creation)
+            .send()
+            .await?;
 
         match resp.status() {
             StatusCode::CREATED => {
@@ -61,13 +63,13 @@ impl Auth {
     }
 
     pub async fn two_factor_login(otp_token: String) -> Result<OtpLoginResponse, RichamsterError> {
-        let payload = serde_json::to_string(&OtpLogin { otp_token })?;
-        let resp = send_request!(
-            Api::Authentication(TwoFactorLogin).full_url(),
-            payload,
-            post
-        );
-
+        let RequestData(url, method) =
+            Api::Authentication(AuthenticationApi::TwoFactorLogin).request_data();
+        let resp = Client::new()
+            .request(method, url)
+            .json(&OtpLogin { otp_token })
+            .send()
+            .await?;
         if resp.status() == StatusCode::CREATED {
             let token: TokenData = serde_json::from_str(&resp.text().await?)?;
             Ok(OtpLoginResponse::Jwt(token.jwt_token))
@@ -78,12 +80,13 @@ impl Auth {
     }
 
     pub async fn verify_token(jwt_token: String) -> Result<TokenData, RichamsterError> {
-        let payload = serde_json::to_string(&TokenData { jwt_token })?;
-        let resp = send_request!(
-            Api::Authentication(AuthenticationApi::VerifyToken).full_url(),
-            payload,
-            post
-        );
+        let RequestData(url, method) =
+            Api::Authentication(AuthenticationApi::VerifyToken).request_data();
+        let resp = Client::new()
+            .request(method, url)
+            .json(&TokenData { jwt_token })
+            .send()
+            .await?;
 
         match resp.status() {
             StatusCode::OK => {
@@ -105,12 +108,13 @@ impl Auth {
     }
 
     pub async fn refresh_token(jwt_token: String) -> Result<TokenData, RichamsterError> {
-        let payload = serde_json::to_string(&TokenData { jwt_token })?;
-        let resp = send_request!(
-            Api::Authentication(AuthenticationApi::RefreshToken).full_url(),
-            payload,
-            post
-        );
+        let RequestData(url, method) =
+            Api::Authentication(AuthenticationApi::VerifyToken).request_data();
+        let resp = Client::new()
+            .request(method, url)
+            .json(&TokenData { jwt_token })
+            .send()
+            .await?;
 
         match resp.status() {
             StatusCode::OK => {

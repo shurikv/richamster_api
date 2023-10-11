@@ -1,16 +1,16 @@
-use crate::api::Api;
 use crate::api::FeedbackApi;
 use crate::api::RequestPath;
+use crate::api::{Api, RequestData};
 use crate::errors::RichamsterError;
 use crate::models::feedback::{ContactUs, ContactUsError, Messenger};
-use crate::send_request;
-use reqwest::StatusCode;
+use reqwest::{Client, StatusCode};
 
 pub struct Feedback;
 
 impl Feedback {
     pub async fn messengers_list() -> Result<Vec<Messenger>, RichamsterError> {
-        let resp = send_request!(Api::Feedback(FeedbackApi::Messengers).full_url(), get);
+        let RequestData(url, method) = Api::Feedback(FeedbackApi::Messengers).request_data();
+        let resp = Client::new().request(method, url).send().await?;
 
         match resp.status() {
             StatusCode::OK => {
@@ -25,12 +25,12 @@ impl Feedback {
     }
 
     pub async fn contact_us(contact_us: ContactUs) -> Result<ContactUs, RichamsterError> {
-        let payload = serde_json::to_string(&contact_us)?;
-        let resp = send_request!(
-            Api::Feedback(FeedbackApi::ContactUs).full_url(),
-            payload,
-            post
-        );
+        let RequestData(url, method) = Api::Feedback(FeedbackApi::ContactUs).request_data();
+        let resp = Client::new()
+            .request(method, url)
+            .json(&contact_us)
+            .send()
+            .await?;
 
         match resp.status() {
             StatusCode::CREATED => {

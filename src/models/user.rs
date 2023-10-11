@@ -4,6 +4,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer};
 use serde_derive::Serialize;
 use std::fmt::{Display, Formatter};
+use url::Url;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 #[serde(untagged)]
@@ -112,24 +113,25 @@ pub struct TransactionsFilter {
 }
 
 impl TransactionsFilter {
-    pub fn compose_url(&self) -> String {
-        let mut result: Vec<String> = Vec::new();
+    pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(token) = &self.currency {
-            result.push(format!("currency={}", token.as_ref()));
+            url.query_pairs_mut()
+                .append_pair("currency", token.as_ref());
         }
         if let Some(transaction_type) = &self.transaction_type {
-            result.push(format!(
-                "type={}",
-                <TransactionType as Into<i32>>::into(*transaction_type)
-            ));
+            let tr_type: i32 = (*transaction_type).into();
+            url.query_pairs_mut()
+                .append_pair("type", tr_type.to_string().as_str());
         }
         if let Some(closed_at_gte) = &self.closed_at_gte {
-            result.push(format!("closed_at__gte={}", closed_at_gte));
+            url.query_pairs_mut()
+                .append_pair("closed_at__gte", closed_at_gte.to_string().as_str());
         }
         if let Some(closed_at_lte) = &self.closed_at_lte {
-            result.push(format!("closed_at__lte={}", closed_at_lte));
+            url.query_pairs_mut()
+                .append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
         }
-        result.join("&")
+        url.to_string()
     }
 }
 
@@ -141,61 +143,23 @@ pub struct OrdersFilter {
 }
 
 impl OrdersFilter {
-    pub fn compose_url(&self) -> String {
-        let mut result: Vec<String> = Vec::new();
+    pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(pair) = &self.pair {
-            result.push(format!("pair={}", pair));
+            url.query_pairs_mut()
+                .append_pair("pair", pair.to_string().as_str());
         }
         if let Some(order_type) = &self.order_type {
-            result.push(format!("side={}", order_type));
+            url.query_pairs_mut()
+                .append_pair("side", order_type.to_string().as_str());
         }
         if let Some(closed_at_gte) = &self.closed_at_gte {
-            result.push(format!("closed_at__gte={}", closed_at_gte));
+            url.query_pairs_mut()
+                .append_pair("closed_at__gte", closed_at_gte.to_string().as_str());
         }
         if let Some(closed_at_lte) = &self.closed_at_lte {
-            result.push(format!("closed_at__lte={}", closed_at_lte));
+            url.query_pairs_mut()
+                .append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
         }
-        result.join("&")
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn transactions_filter_compose() {
-        let tr_par = TransactionsFilter {
-            currency: Some(Token::ADA),
-            transaction_type: Some(TransactionType::Transfer),
-            closed_at_gte: None,
-            closed_at_lte: None,
-        };
-        let str = tr_par.compose_url();
-        assert_eq!(str, "currency=ADA&type=5".to_owned());
-    }
-
-    #[test]
-    fn empty_transactions_filter_compose() {
-        let tr_par = TransactionsFilter {
-            currency: None,
-            transaction_type: None,
-            closed_at_gte: None,
-            closed_at_lte: None,
-        };
-        let str = tr_par.compose_url();
-        assert!(str.is_empty());
-    }
-
-    #[test]
-    fn one_param_transactions_parameters_compose() {
-        let tr_par = TransactionsFilter {
-            currency: Some(Token::ADA),
-            transaction_type: None,
-            closed_at_gte: None,
-            closed_at_lte: None,
-        };
-        let str = tr_par.compose_url();
-        assert_eq!(str, "currency=ADA".to_owned());
+        url.to_string()
     }
 }

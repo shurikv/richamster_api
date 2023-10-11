@@ -1,9 +1,9 @@
 use crate::api::token::Token;
-use crate::api::{Api, RequestPath, TransferApi};
+use crate::api::{Api, RequestData, RequestPath, TransferApi};
 use crate::errors::RichamsterError;
 use crate::models::transfer::TransferQuery;
-use crate::prepare_request;
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
+use reqwest::Client;
 use secrecy::Secret;
 use std::convert::AsRef;
 
@@ -31,7 +31,7 @@ impl Transfer {
         to: String,
         pin_code: String,
     ) -> Result<(), RichamsterError> {
-        let url = Api::Transfer(TransferApi::Transfer).full_url();
+        let RequestData(url, method) = Api::Transfer(TransferApi::Transfer).request_data();
         let transfer_query = TransferQuery {
             amount: amount.to_string(),
             currency: token.as_ref().to_owned(),
@@ -39,8 +39,11 @@ impl Transfer {
             pin_code,
         };
         let payload = serde_json::to_string(&transfer_query)?;
-        prepare_request!(url, payload, post)
-            .compose_with_payload(&self.auth_state, &payload)
+        Client::new()
+            .request(method, url)
+            .body(payload.clone())
+            .header("Content-Type", "application/json")
+            .compose_with_payload(&self.auth_state, payload.as_str())
             .send()
             .await?;
         Ok(())

@@ -78,15 +78,16 @@ impl OrderBookFilter {
         Self { pair, order_type }
     }
 
-    pub fn compose_url(&self) -> String {
-        let mut result: Vec<String> = Vec::new();
+    pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(pair) = &self.pair {
-            result.push(format!("pair={}", pair));
+            url.query_pairs_mut()
+                .append_pair("pair", pair.to_string().as_str());
         }
         if let Some(order_type) = &self.order_type {
-            result.push(format!("side={}", order_type.to_string().to_lowercase()));
+            url.query_pairs_mut()
+                .append_pair("side", order_type.to_string().to_lowercase().as_str());
         }
-        result.join("&")
+        url.to_string()
     }
 }
 
@@ -130,18 +131,19 @@ impl OrdersFilter {
         }
     }
 
-    pub fn compose_url(&self) -> String {
-        let mut result: Vec<String> = Vec::new();
+    pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(pair) = &self.pair {
-            result.push(format!("pair={}", pair));
+            url.query_pairs_mut()
+                .append_pair("pair", pair.to_string().as_str());
         }
         if let Some(ordering) = &self.ordering {
-            result.push(format!("ordering={}", ordering));
+            url.query_pairs_mut().append_pair("ordering", ordering);
         }
         if let Some(page_size) = &self.page_size {
-            result.push(format!("page_size={}", page_size));
+            url.query_pairs_mut()
+                .append_pair("page_size", page_size.to_string().as_str());
         }
-        result.join("&")
+        url.to_string()
     }
 }
 
