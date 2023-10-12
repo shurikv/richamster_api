@@ -7,16 +7,15 @@ use crate::errors::RichamsterError;
 use crate::models::user::{
     OrdersFilter, TransactionsFilter, UserBalance, UserDetail, UserOrder, UserTransaction,
 };
-use crate::process_response;
 use crate::richamster::common;
 use crate::richamster::common::{AuthState, HeaderCompose};
-use reqwest::{IntoUrl, Method, StatusCode};
+use crate::{process_response, send_request};
+use reqwest::StatusCode;
 use secrecy::Secret;
 
 #[derive(Default)]
 pub struct User {
     auth_state: AuthState,
-    client: reqwest::Client,
 }
 
 impl User {
@@ -27,7 +26,6 @@ impl User {
     pub fn with_jwt_token(token: String) -> Self {
         Self {
             auth_state: AuthState::JwtTokenAuth(common::JwtToken(Secret::new(token))),
-            ..Default::default()
         }
     }
 
@@ -37,24 +35,11 @@ impl User {
                 common::ApiKey(Secret::new(api_key)),
                 common::SecretKey(Secret::new(secret_key)),
             ),
-            ..Default::default()
         }
     }
 }
 
 impl User {
-    async fn send_request<U: IntoUrl>(
-        &self,
-        url: U,
-        method: Method,
-    ) -> Result<reqwest::Response, reqwest::Error> {
-        self.client
-            .request(method, url)
-            .compose(&self.auth_state)
-            .send()
-            .await
-    }
-
     pub async fn balances(
         &self,
         currency: Option<token::Token>,
@@ -64,13 +49,13 @@ impl User {
             url.query_pairs_mut()
                 .append_pair("currency", token.as_ref());
         }
-        let resp = self.send_request(url, method).await?;
+        let resp = send_request!(url, method, self.auth_state);
         process_response!(resp, Vec<UserBalance>)
     }
 
     pub async fn detail_info(&self) -> Result<UserDetail, RichamsterError> {
         let RequestData(url, method) = Api::User(Detail).request_data();
-        let resp = self.send_request(url, method).await?;
+        let resp = send_request!(url, method, self.auth_state);
         process_response!(resp, UserDetail)
     }
 
@@ -80,7 +65,7 @@ impl User {
     ) -> Result<Vec<UserTransaction>, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Transactions).request_data();
         let url = parameters.compose_url(&mut url);
-        let resp = self.send_request(url, method).await?;
+        let resp = send_request!(url, method, self.auth_state);
         process_response!(resp, Vec<UserTransaction>)
     }
 
@@ -90,7 +75,7 @@ impl User {
     ) -> Result<Vec<UserOrder>, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Orders).request_data();
         let url = parameters.compose_url(&mut url);
-        let resp = self.send_request(url, method).await?;
+        let resp = send_request!(url, method, self.auth_state);
         process_response!(resp, Vec<UserOrder>)
     }
 }

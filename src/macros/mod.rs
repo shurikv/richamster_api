@@ -1,15 +1,21 @@
 #[macro_export]
 macro_rules! send_request {
-    ( $url:expr, $request_type:ident ) => {{
-        let client = reqwest::Client::new();
-        client.$request_type($url).send().await?
+    ( $url:expr, $method:expr ) => {{
+        reqwest::Client::new().request($method, $url).send().await?
     }};
-    ( $url:expr, $payload:expr, $request_type:ident ) => {{
-        let client = reqwest::Client::new();
-        client
-            .$request_type($url)
-            .body($payload.clone())
+    ( $url:expr, $method:expr, $auth_state:expr ) => {{
+        reqwest::Client::new()
+            .request($method, $url)
+            .compose(&$auth_state)
+            .send()
+            .await?
+    }};
+    ( $url:expr, $method:expr, $auth_state:expr, $body:expr) => {{
+        reqwest::Client::new()
+            .request($method, $url)
+            .body($body.clone())
             .header("Content-Type", "application/json")
+            .compose_with_payload(&$auth_state, $body.as_str())
             .send()
             .await?
     }};
