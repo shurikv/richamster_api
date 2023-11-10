@@ -96,7 +96,8 @@ where
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct UserOrder {
     pub pk: i32,
-    pub closed_at: String,
+    #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
+    pub closed_at: DateTime<FixedOffset>,
     #[serde(rename = "type")]
     pub order_type: OrderType,
     pub unit_price: String,
@@ -111,7 +112,6 @@ pub struct TransactionsFilter {
     pub closed_at_gte: Option<i32>,
     pub closed_at_lte: Option<i32>,
 }
-
 impl TransactionsFilter {
     pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(token) = &self.currency {

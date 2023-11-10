@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use strum_macros::AsRefStr;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, AsRefStr)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, AsRefStr, Hash, Eq)]
 pub enum Token {
     FSH,
     TON,
@@ -80,7 +80,7 @@ pub enum TokenError {
     InvalidToken(String),
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Hash, Eq, Clone, Copy)]
 pub struct CurrencyPair([Token; 2]);
 
 impl CurrencyPair {

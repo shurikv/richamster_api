@@ -55,22 +55,22 @@ pub struct Ticker {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Order {
-    volume: String,
-    unit_price: String,
-    sum: String,
-    side: OrderType,
-    pair: String,
+    pub volume: String,
+    pub unit_price: String,
+    pub sum: String,
+    pub side: OrderType,
+    pub pair: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OrdersBook {
-    buying: Option<Vec<Order>>,
-    selling: Option<Vec<Order>>,
+    pub buying: Option<Vec<Order>>,
+    pub selling: Option<Vec<Order>>,
 }
 
 pub struct OrderBookFilter {
-    pair: Option<CurrencyPair>,
-    order_type: Option<OrderType>,
+    pub pair: Option<CurrencyPair>,
+    pub order_type: Option<OrderType>,
 }
 
 impl OrderBookFilter {
