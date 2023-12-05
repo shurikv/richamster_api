@@ -81,11 +81,19 @@ pub enum TokenError {
 }
 
 #[derive(Debug, PartialEq, Hash, Eq, Clone, Copy)]
-pub struct CurrencyPair([Token; 2]);
+pub struct CurrencyPair(pub [Token; 2]);
 
 impl CurrencyPair {
     pub fn new(first: Token, second: Token) -> Self {
         Self([first, second])
+    }
+
+    pub fn first(&self) -> Token {
+        self.0[0]
+    }
+
+    pub fn second(&self) -> Token {
+        self.0[1]
     }
 }
 

@@ -27,9 +27,9 @@ pub struct Market {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct CurrencyPairRestriction {
-    currency_pair: String,
-    min_quantity: String,
-    price_scale: i32,
+    pub currency_pair: String,
+    pub min_quantity: String,
+    pub price_scale: i32,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
