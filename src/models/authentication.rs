@@ -1,16 +1,17 @@
 use serde_derive::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Login {
-    username: String,
+    email: String,
     password: String,
 }
 
 impl Login {
-    pub fn new(username: impl AsRef<str>, password: impl AsRef<str>) -> Self {
+    pub fn new(email: impl AsRef<str>, password: impl AsRef<str>) -> Self {
         Self {
-            username: username.as_ref().to_owned(),
+            email: email.as_ref().to_owned(),
             password: password.as_ref().to_owned(),
         }
     }
@@ -22,11 +23,20 @@ pub enum LoginResponse {
     RequiresTwoFactor(bool),
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LoginResponseError {
-    pub username: Option<Vec<String>>,
-    pub password: Option<Vec<String>>,
-    pub non_field_errors: Option<Vec<String>>,
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub errors: Vec<Error>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Error {
+    pub code: String,
+    pub detail: String,
+    pub attr: Value,
 }
 
 impl Display for LoginResponseError {
@@ -100,8 +110,13 @@ pub enum OtpLoginResponse {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct TokenData {
-    #[serde(rename = "token")]
-    pub jwt_token: String,
+    pub access: String,
+    pub refresh: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct RefreshToken {
+    pub refresh: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]

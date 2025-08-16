@@ -1,10 +1,11 @@
 use crate::models::common::TransactionType::{
-    Dividends, Referral, Replenish, Transfer, Unknown, Withdrawal,
+    Conversion, Dividends, NftAuction, OtcTransfer, Referral, Replenish, Staking, Transfer,
+    Unknown, Withdrawal,
 };
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Deserializer};
 use serde_derive::Serialize;
-use std::fmt;
+use strum_macros::Display;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Currency {
@@ -18,17 +19,12 @@ pub struct Currency {
     pub can_output: bool,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Display)]
 #[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 pub enum OrderType {
     Buying,
     Selling,
-}
-
-impl fmt::Display for OrderType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -47,6 +43,10 @@ pub enum TransactionType {
     Dividends,
     Referral,
     Transfer,
+    Conversion,
+    Staking,
+    OtcTransfer,
+    NftAuction,
     Unknown,
 }
 
@@ -58,6 +58,10 @@ impl From<i32> for TransactionType {
             3 => Dividends,
             4 => Referral,
             5 => Transfer,
+            6 => Conversion,
+            7 => Staking,
+            8 => OtcTransfer,
+            9 => NftAuction,
             _ => Unknown,
         }
     }
@@ -71,6 +75,10 @@ impl From<TransactionType> for i32 {
             Dividends => 3,
             Referral => 4,
             Transfer => 5,
+            Conversion => 6,
+            Staking => 7,
+            OtcTransfer => 8,
+            NftAuction => 9,
             Unknown => -1,
         }
     }
@@ -80,8 +88,22 @@ pub fn timestamp_deserialize<'de, D>(deserializer: D) -> Result<DateTime<FixedOf
 where
     D: Deserializer<'de>,
 {
-    let timestamp: String = Deserialize::deserialize(deserializer)?;
-    let datetime = DateTime::parse_from_str(&timestamp, "%s").map_err(serde::de::Error::custom)?;
+    let ts: f64 = Deserialize::deserialize(deserializer)?;
+    let secs = ts.trunc() as i64;
+    let nanos = ((ts.fract()) * 1_000_000_000.0).round() as u32;
+    let dt = DateTime::from_timestamp(secs, nanos).unwrap();
+    Ok(DateTime::from(dt))
+}
+
+pub fn string_timestamp_deserialize<'de, D>(
+    deserializer: D,
+) -> Result<DateTime<FixedOffset>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let timestamp: Option<String> = Deserialize::deserialize(deserializer)?;
+    let datetime =
+        DateTime::parse_from_str(&timestamp.unwrap(), "%s").map_err(serde::de::Error::custom)?;
     Ok(datetime)
 }
 
@@ -98,4 +120,30 @@ where
     let datetime =
         DateTime::parse_from_str(&timestamp.unwrap(), "%s").map_err(serde::de::Error::custom)?;
     Ok(Some(datetime))
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct CurrencyChannel {
+    pub id: i32,
+    #[serde(rename = "finserver_currency_name")]
+    pub currency_name: String,
+    pub blockchain_protocol: i32,
+    #[serde(rename = "currency_channel_short_description")]
+    pub short_description: String,
+    #[serde(rename = "finserver_channel_fee")]
+    pub channel_fee: Option<String>,
+    pub network: String,
+    pub is_p2p_oriented: bool,
+    pub bank_cards: Vec<String>,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn order_type_to_string() {
+        let order_type = OrderType::Buying;
+        assert_eq!(order_type.to_string(), "buying");
+    }
 }

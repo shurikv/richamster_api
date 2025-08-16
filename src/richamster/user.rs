@@ -1,17 +1,16 @@
-use crate::api::UserApi::Detail;
-use crate::api::UserApi::Transactions;
-use crate::api::UserApi::{Balances, Orders};
-use crate::api::{token, RequestData};
+use crate::api::UserApi::{Balances, Detail, Orders, Transactions, Transfer};
 use crate::api::{Api, RequestPath};
+use crate::api::{RequestData, token};
 use crate::errors::RichamsterError;
 use crate::models::user::{
-    OrdersFilter, TransactionsFilter, UserBalance, UserDetail, UserOrder, UserTransaction,
+    TransactionsFilter, TransferQuery, UserBalance, UserDetail, UserOrder, UserOrdersFilter,
+    UserTransaction,
 };
 use crate::richamster::common;
-use crate::richamster::common::{AuthState, HeaderCompose};
+use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::{process_response, send_request};
 use reqwest::StatusCode;
-use secrecy::Secret;
+use secrecy::SecretBox;
 
 #[derive(Default)]
 pub struct User {
@@ -25,15 +24,25 @@ impl User {
 
     pub fn with_jwt_token(token: String) -> Self {
         Self {
-            auth_state: AuthState::JwtTokenAuth(common::JwtToken(Secret::new(token))),
+            auth_state: AuthState::JwtTokenAuth(common::JwtToken(SecretBox::new(Box::new(token)))),
         }
     }
 
     pub fn with_keys(api_key: String, secret_key: String) -> Self {
         Self {
             auth_state: AuthState::ApiSecretKeyAuth(
-                common::ApiKey(Secret::new(api_key)),
-                common::SecretKey(Secret::new(secret_key)),
+                common::ApiKey(SecretBox::new(Box::new(api_key))),
+                common::SecretKey(SecretBox::new(Box::new(secret_key))),
+            ),
+        }
+    }
+
+    pub fn with_jwt_and_keys(jwt: String, api_key: String, secret_key: String) -> Self {
+        Self {
+            auth_state: AuthState::JwtTokenWithApiSecretKeyAuth(
+                JwtToken(SecretBox::new(Box::new(jwt))),
+                ApiKey(SecretBox::new(Box::new(api_key))),
+                SecretKey(SecretBox::new(Box::new(secret_key))),
             ),
         }
     }
@@ -71,12 +80,20 @@ impl User {
 
     pub async fn orders(
         &self,
-        parameters: OrdersFilter,
+        parameters: UserOrdersFilter,
     ) -> Result<Vec<UserOrder>, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Orders).request_data();
         let url = parameters.compose_url(&mut url);
         let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, Vec<UserOrder>)
+        let string = resp.text().await?;
+        Ok(serde_json::from_str(&string)?)
+    }
+
+    pub async fn transfer(&self, transfer_query: TransferQuery) -> Result<(), RichamsterError> {
+        let RequestData(url, method) = Api::User(Transfer).request_data();
+        let payload = serde_json::to_string(&transfer_query)?;
+        send_request!(url, method, self.auth_state, payload);
+        Ok(())
     }
 }
 

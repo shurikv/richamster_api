@@ -3,6 +3,12 @@ use std::fmt::{Display, Formatter};
 use url::Url;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct ContactUsResponse {
+    pub success: bool,
+    pub data: ContactUs,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct ContactUs {
     pub name: Option<String>,
     pub email: Option<String>,
@@ -11,12 +17,18 @@ pub struct ContactUs {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct MessengerResponse {
+    pub success: bool,
+    pub data: Vec<Messenger>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Messenger {
     pub id: i32,
     pub order: i32,
     pub title: String,
     pub icon: Url,
-    pub link: String,
+    pub link: Url,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]

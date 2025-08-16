@@ -3,7 +3,8 @@ use crate::errors::RichamsterError;
 use crate::models::authentication::LoginResponse::{Jwt, RequiresTwoFactor};
 use crate::models::authentication::{
     Login, LoginResponse, LoginResponseError, NonFieldsError, OtpLogin, OtpLoginResponse,
-    OtpLoginResponseError, RegisterUser, RegisterUserError, RegisterUserResponse, TokenData,
+    OtpLoginResponseError, RefreshToken, RegisterUser, RegisterUserError, RegisterUserResponse,
+    TokenData,
 };
 use reqwest::{Client, IntoUrl, Method, Response, StatusCode};
 use serde::Serialize;
@@ -20,22 +21,28 @@ impl Auth {
     }
 
     pub async fn login(
-        username: impl AsRef<str>,
+        email: impl AsRef<str>,
         password: impl AsRef<str>,
     ) -> Result<LoginResponse, RichamsterError> {
-        let login = Login::new(username.as_ref(), password.as_ref());
+        let login = Login::new(email.as_ref(), password.as_ref());
         let RequestData(url, method) = Api::Authentication(AuthenticationApi::Login).request_data();
         let resp = Self::send_request(url, method, login).await?;
         match resp.status() {
             StatusCode::OK => Ok(RequiresTwoFactor(true)),
             StatusCode::CREATED => {
                 let token: TokenData = serde_json::from_str(&resp.text().await?)?;
-                Ok(Jwt(token.jwt_token))
+                Ok(Jwt(token.access))
             }
             StatusCode::SERVICE_UNAVAILABLE => Err(RichamsterError::ServiceUnavailable),
             StatusCode::BAD_REQUEST => {
-                let error: LoginResponseError = serde_json::from_str(&resp.text().await?)?;
+                let text = resp.text().await?;
+                let error: LoginResponseError = serde_json::from_str(&text)?;
                 Err(RichamsterError::Login(error))
+            }
+            StatusCode::FORBIDDEN => {
+                let text = resp.text().await?;
+                let resp: LoginResponseError = serde_json::from_str(&text)?;
+                Err(RichamsterError::InvalidCredential(resp))
             }
             status => Err(RichamsterError::UnsupportedResponseCode(
                 status,
@@ -45,11 +52,11 @@ impl Auth {
     }
 
     pub async fn register_user(
-        user_creation: RegisterUser,
+        register_user: RegisterUser,
     ) -> Result<RegisterUserResponse, RichamsterError> {
         let RequestData(url, method) =
             Api::Authentication(AuthenticationApi::Register).request_data();
-        let resp = Self::send_request(url, method, user_creation).await?;
+        let resp = Self::send_request(url, method, register_user).await?;
 
         match resp.status() {
             StatusCode::CREATED => {
@@ -69,40 +76,17 @@ impl Auth {
         let resp = Self::send_request(url, method, OtpLogin { otp_token }).await?;
         if resp.status() == StatusCode::CREATED {
             let token: TokenData = serde_json::from_str(&resp.text().await?)?;
-            Ok(OtpLoginResponse::Jwt(token.jwt_token))
+            Ok(OtpLoginResponse::Jwt(token.access))
         } else {
             let error: OtpLoginResponseError = serde_json::from_str(&resp.text().await?)?;
             Err(RichamsterError::Otp(error))
         }
     }
 
-    pub async fn verify_token(jwt_token: String) -> Result<TokenData, RichamsterError> {
-        let RequestData(url, method) =
-            Api::Authentication(AuthenticationApi::VerifyToken).request_data();
-        let resp = Self::send_request(url, method, TokenData { jwt_token }).await?;
-        match resp.status() {
-            StatusCode::OK => {
-                let response: TokenData = serde_json::from_str(&resp.text().await?)?;
-                Ok(response)
-            }
-            StatusCode::BAD_REQUEST => {
-                let response: NonFieldsError = serde_json::from_str(&resp.text().await?)?;
-                Err(RichamsterError::InvalidJwtToken(response))
-            }
-            status => {
-                let response_text = resp.text().await?;
-                Err(RichamsterError::UnsupportedResponseCode(
-                    status,
-                    response_text,
-                ))
-            }
-        }
-    }
-
     pub async fn refresh_token(jwt_token: String) -> Result<TokenData, RichamsterError> {
         let RequestData(url, method) =
-            Api::Authentication(AuthenticationApi::VerifyToken).request_data();
-        let resp = Self::send_request(url, method, TokenData { jwt_token }).await?;
+            Api::Authentication(AuthenticationApi::RefreshToken).request_data();
+        let resp = Self::send_request(url, method, RefreshToken { refresh: jwt_token }).await?;
         match resp.status() {
             StatusCode::OK => {
                 let response: TokenData = serde_json::from_str(&resp.text().await?)?;

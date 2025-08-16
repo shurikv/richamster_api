@@ -14,15 +14,26 @@ pub enum ActiveBalanceType {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct UserBalanceResponse {
+    pub success: bool,
+    pub data: Vec<UserBalance>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct UserBalance {
     pub currency: Currency,
     pub balance: String,
     pub active_balance: ActiveBalanceType,
     pub in_orders: String,
-    pub in_auctions: String,
-    pub in_krb: String,
-    pub in_btc: f64,
+    pub in_usdt: String,
+    pub in_btc: String,
     pub in_grn: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct UserDetailResponse {
+    pub success: bool,
+    pub data: UserDetail,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -104,6 +115,8 @@ pub struct UserOrder {
     pub volume: String,
     pub sum: String,
     pub pair: String,
+    pub closed_type: OrderType,
+    pub source: Option<String>,
 }
 
 pub struct TransactionsFilter {
@@ -135,14 +148,51 @@ impl TransactionsFilter {
     }
 }
 
-pub struct OrdersFilter {
+#[derive(Default)]
+pub struct UserOrdersFilter {
     pub pair: Option<CurrencyPair>,
     pub order_type: Option<OrderType>,
     pub closed_at_gte: Option<i32>,
     pub closed_at_lte: Option<i32>,
 }
 
-impl OrdersFilter {
+impl UserOrdersFilter {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn pair(mut self, pair: CurrencyPair) -> Self {
+        self.pair = Some(pair);
+        self
+    }
+
+    pub fn order_type(self, order_type: OrderType) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: Some(order_type),
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: self.closed_at_lte,
+        }
+    }
+
+    pub fn closed_at_gte(self, closed_at_gte: i32) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: Some(closed_at_gte),
+            closed_at_lte: self.closed_at_lte,
+        }
+    }
+
+    pub fn closed_at_lte(self, closed_at_lte: i32) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: Some(closed_at_lte),
+        }
+    }
+
     pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(pair) = &self.pair {
             url.query_pairs_mut()
@@ -161,5 +211,24 @@ impl OrdersFilter {
                 .append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
         }
         url.to_string()
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct TransferQuery {
+    pub amount: String,
+    pub currency: Token,
+    pub to: String,
+    pub pin_code: String,
+}
+
+impl TransferQuery {
+    pub fn new(amount: f64, currency: Token, to: String, pin_code: String) -> Self {
+        Self {
+            amount: amount.to_string(),
+            currency,
+            to,
+            pin_code,
+        }
     }
 }

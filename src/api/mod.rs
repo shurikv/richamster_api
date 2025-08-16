@@ -12,9 +12,9 @@ pub enum Api {
     Exchange(ExchangeApi),
     Feedback(FeedbackApi),
     Authentication(AuthenticationApi),
-    Payments(PaymentsApi),
-    Transfer(TransferApi),
+    Withdraw(WithdrawApi),
     User(UserApi),
+    Replenish(ReplenishApi),
 }
 
 pub enum ExchangeApi {
@@ -32,8 +32,18 @@ pub enum ExchangeApi {
     DestroyOrder,
 }
 
+pub enum WithdrawApi {
+    Withdraw,
+    WithdrawInfo,
+}
+
+pub enum ReplenishApi {
+    ReplenishChannelsInfo,
+    P2PReplenish,
+    ReplenishInfo,
+}
+
 pub enum FeedbackApi {
-    ContactUs,
     Messengers,
 }
 
@@ -41,19 +51,7 @@ pub enum AuthenticationApi {
     Login,
     Register,
     RefreshToken,
-    VerifyToken,
     TwoFactorLogin,
-}
-
-pub enum PaymentsApi {
-    ReplenishInfo,
-    Replenish,
-    WithdrawInfo,
-    Withdraw,
-}
-
-pub enum TransferApi {
-    Transfer,
 }
 
 pub enum UserApi {
@@ -61,6 +59,7 @@ pub enum UserApi {
     Detail,
     Orders,
     Transactions,
+    Transfer,
 }
 
 pub trait RequestPath {
@@ -113,9 +112,6 @@ impl RequestPath for Api {
                 }
             },
             Api::Feedback(feedback) => match feedback {
-                FeedbackApi::ContactUs => {
-                    RequestData(self.full_url("feedback/contact-us/"), Method::POST)
-                }
                 FeedbackApi::Messengers => {
                     RequestData(self.full_url("feedback/messengers/"), Method::GET)
                 }
@@ -128,30 +124,23 @@ impl RequestPath for Api {
                 AuthenticationApi::RefreshToken => {
                     RequestData(self.full_url("token/refresh/"), Method::POST)
                 }
-                AuthenticationApi::VerifyToken => {
-                    RequestData(self.full_url("token/verify/"), Method::POST)
-                }
                 AuthenticationApi::TwoFactorLogin => {
                     RequestData(self.full_url("two-factor-login/"), Method::POST)
                 }
             },
-            Api::Payments(payments) => match payments {
-                PaymentsApi::ReplenishInfo => {
-                    RequestData(self.full_url("payments/replenish/"), Method::GET)
-                }
-                PaymentsApi::Replenish => {
-                    RequestData(self.full_url("payments/replenish/"), Method::POST)
-                }
-                PaymentsApi::WithdrawInfo => {
-                    RequestData(self.full_url("payments/withdraw/"), Method::GET)
-                }
-                PaymentsApi::Withdraw => {
-                    RequestData(self.full_url("payments/withdraw/"), Method::POST)
-                }
+            Api::Withdraw(withdraw) => match withdraw {
+                WithdrawApi::Withdraw => RequestData(self.full_url("withdraw/"), Method::POST),
+                WithdrawApi::WithdrawInfo => RequestData(self.full_url("withdraw/"), Method::GET),
             },
-            Api::Transfer(transfer) => match transfer {
-                TransferApi::Transfer => {
-                    RequestData(self.full_url("transfer/create/"), Method::POST)
+            Api::Replenish(replenish) => match replenish {
+                ReplenishApi::ReplenishInfo => {
+                    RequestData(self.full_url("replenish/"), Method::GET)
+                }
+                ReplenishApi::P2PReplenish => {
+                    RequestData(self.full_url("replenish/p2p/"), Method::POST)
+                }
+                ReplenishApi::ReplenishChannelsInfo => {
+                    RequestData(self.full_url("replenish/blockchain/"), Method::GET)
                 }
             },
             Api::User(user) => match user {
@@ -161,6 +150,7 @@ impl RequestPath for Api {
                 UserApi::Transactions => {
                     RequestData(self.full_url("user/transactions/"), Method::GET)
                 }
+                UserApi::Transfer => RequestData(self.full_url("user/transfer/"), Method::POST),
             },
         }
     }
@@ -277,22 +267,10 @@ mod test {
             "https://richamster.com/public/v1/token/refresh/"
         );
         assert_eq!(req_data.1, Method::POST);
-        let req_data = Api::Authentication(AuthenticationApi::VerifyToken).request_data();
-        assert_eq!(
-            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/token/verify/"
-        );
-        assert_eq!(req_data.1, Method::POST);
     }
 
     #[test]
     fn feedback_join_path() {
-        let req_data = Api::Feedback(FeedbackApi::ContactUs).request_data();
-        assert_eq!(
-            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/feedback/contact-us/"
-        );
-        assert_eq!(req_data.1, Method::POST);
         let req_data = Api::Feedback(FeedbackApi::Messengers).request_data();
         assert_eq!(
             percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
@@ -327,43 +305,49 @@ mod test {
             "https://richamster.com/public/v1/user/transactions/"
         );
         assert_eq!(req_data.1, Method::GET);
+        let req_data = Api::User(UserApi::Transfer).request_data();
+        assert_eq!(
+            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
+            "https://richamster.com/public/v1/user/transfer/"
+        );
+        assert_eq!(req_data.1, Method::POST);
     }
 
     #[test]
-    fn payments_join_path() {
-        let req_data = Api::Payments(PaymentsApi::Replenish).request_data();
+    fn withdraw_join_path() {
+        let req_data = Api::Withdraw(WithdrawApi::Withdraw).request_data();
         assert_eq!(
             percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/payments/replenish/"
+            "https://richamster.com/public/v1/withdraw/"
         );
         assert_eq!(req_data.1, Method::POST);
-        let req_data = Api::Payments(PaymentsApi::Withdraw).request_data();
+        let req_data = Api::Withdraw(WithdrawApi::WithdrawInfo).request_data();
         assert_eq!(
             percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/payments/withdraw/"
-        );
-        assert_eq!(req_data.1, Method::POST);
-        let req_data = Api::Payments(PaymentsApi::ReplenishInfo).request_data();
-        assert_eq!(
-            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/payments/replenish/"
-        );
-        assert_eq!(req_data.1, Method::GET);
-        let req_data = Api::Payments(PaymentsApi::WithdrawInfo).request_data();
-        assert_eq!(
-            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/payments/withdraw/"
+            "https://richamster.com/public/v1/withdraw/"
         );
         assert_eq!(req_data.1, Method::GET);
     }
 
     #[test]
-    fn transfer_join_path() {
-        let req_data = Api::Transfer(TransferApi::Transfer).request_data();
+    fn replenish_join_path() {
+        let req_data = Api::Replenish(ReplenishApi::P2PReplenish).request_data();
         assert_eq!(
             percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
-            "https://richamster.com/public/v1/transfer/create/"
+            "https://richamster.com/public/v1/replenish/p2p/"
         );
         assert_eq!(req_data.1, Method::POST);
+        let req_data = Api::Replenish(ReplenishApi::ReplenishInfo).request_data();
+        assert_eq!(
+            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
+            "https://richamster.com/public/v1/replenish/"
+        );
+        assert_eq!(req_data.1, Method::GET);
+        let req_data = Api::Replenish(ReplenishApi::ReplenishChannelsInfo).request_data();
+        assert_eq!(
+            percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
+            "https://richamster.com/public/v1/replenish/blockchain/"
+        );
+        assert_eq!(req_data.1, Method::GET);
     }
 }

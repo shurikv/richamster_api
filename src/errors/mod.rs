@@ -1,18 +1,20 @@
-use crate::api::token::CurrencyPair;
+use crate::api::token::{CurrencyPair, Token};
 use crate::models::authentication::{
     LoginResponseError, NonFieldsError, OtpLoginResponseError, RegisterUserError,
 };
 use crate::models::exchange::NewOrderError;
 use crate::models::feedback::ContactUsError;
-use crate::models::payments::WithdrawError;
 use reqwest::StatusCode;
 use thiserror::Error;
 use url::ParseError;
+use crate::models::withdraw::WithdrawError;
 
 #[derive(Error, Debug)]
 pub enum RichamsterError {
     #[error("Reqwest error: {0}")]
     Reqwest(#[from] reqwest::Error),
+    #[error("No active account found: {0}")]
+    InvalidCredential(LoginResponseError),
     #[error("Unauthorized access")]
     UnauthorizedAccess,
     #[error("Invalid authorization type")]
@@ -43,4 +45,6 @@ pub enum RichamsterError {
     WithdrawError(WithdrawError),
     #[error("Creation order error: {0}")]
     NewOrderError(NewOrderError),
+    #[error("Replenish info not found for token: {0}, id: {1}")]
+    ReplenishInfoNotFound(Token, String)
 }

@@ -1,28 +1,19 @@
-use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
+use serde_derive::{Deserialize, Serialize};
+use crate::models::common::CurrencyChannel;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct WithdrawInfo {
+pub struct WithdrawInfoResponse {
     pub fee: f64,
+    pub channels: Vec<CurrencyChannel>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct ReplenishInfo {
-    pub address: String,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct Withdraw {
+pub struct WithdrawData {
     pub address: String,
     pub sum: String,
-    pub fee: Option<String>,
     pub pin_code: String,
-    pub minimum_confirmations: u8,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct WithdrawResponse {
-    pub response_message: String,
+    pub finserver_channel_name: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -50,4 +41,9 @@ impl Display for WithdrawError {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct WithdrawDetailError {
     pub detail: String,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct WithdrawResponse {
+    pub status: String,
 }

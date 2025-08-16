@@ -1,8 +1,6 @@
 #[macro_export]
 macro_rules! send_request {
-    ( $url:expr, $method:expr ) => {{
-        reqwest::Client::new().request($method, $url).send().await?
-    }};
+    ( $url:expr, $method:expr ) => {{ reqwest::Client::new().request($method, $url).send().await? }};
     ( $url:expr, $method:expr, $auth_state:expr ) => {{
         reqwest::Client::new()
             .request($method, $url)

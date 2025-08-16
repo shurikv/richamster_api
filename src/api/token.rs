@@ -16,7 +16,7 @@ pub enum Token {
     SHIB,
     TLR,
     LINK,
-    MATIC,
+    POL,
     UNI,
     USDC,
     BAT,
@@ -34,6 +34,10 @@ pub enum Token {
     UAH,
     BTC,
     LTC,
+    TAL,
+    DOT,
+    NFT,
+    SOL,
 }
 
 impl FromStr for Token {
@@ -52,7 +56,7 @@ impl FromStr for Token {
             "SHIB" => Ok(Token::SHIB),
             "TLR" => Ok(Token::TLR),
             "LINK" => Ok(Token::LINK),
-            "MATIC" => Ok(Token::MATIC),
+            "POL" => Ok(Token::POL),
             "UNI" => Ok(Token::UNI),
             "USDC" => Ok(Token::USDC),
             "BAT" => Ok(Token::BAT),
@@ -70,11 +74,20 @@ impl FromStr for Token {
             "UAH" => Ok(Token::UAH),
             "BTC" => Ok(Token::BTC),
             "LTC" => Ok(Token::LTC),
+            "TAL" => Ok(Token::TAL),
+            "DOT" => Ok(Token::DOT),
+            "NFT" => Ok(Token::NFT),
+            "SOL" => Ok(Token::SOL),
             token => Err(TokenError::InvalidToken(token.to_owned())),
         }
     }
 }
 
+impl Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_ref())
+    }
+}
 #[derive(Debug)]
 pub enum TokenError {
     InvalidToken(String),

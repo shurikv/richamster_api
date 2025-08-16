@@ -1,14 +1,14 @@
 use hmac_sha256::HMAC;
 use reqwest::RequestBuilder;
-use secrecy::{ExposeSecret, Secret};
+use secrecy::{ExposeSecret, SecretBox};
 
 const HEADER_API_KEY: &str = "Api-Key";
 const HEADER_SIGNATURE: &str = "Signature";
 const HEADER_AUTH: &str = "Authorization";
 const JWT: &str = "JWT";
 
-#[derive(Debug, Clone)]
-pub struct JwtToken(pub Secret<String>);
+#[derive(Debug)]
+pub struct JwtToken(pub SecretBox<String>);
 
 impl JwtToken {
     fn value(&self) -> &str {
@@ -16,8 +16,8 @@ impl JwtToken {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct ApiKey(pub Secret<String>);
+#[derive(Debug)]
+pub struct ApiKey(pub SecretBox<String>);
 
 impl ApiKey {
     fn value(&self) -> &str {
@@ -25,8 +25,8 @@ impl ApiKey {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct SecretKey(pub Secret<String>);
+#[derive(Debug)]
+pub struct SecretKey(pub SecretBox<String>);
 
 impl SecretKey {
     fn value(&self) -> &str {
@@ -34,7 +34,7 @@ impl SecretKey {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 pub enum AuthState {
     #[default]
     Unauthorized,

@@ -7,12 +7,24 @@ use std::fmt::{Display, Formatter};
 use url::Url;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct CurrencyInfoResponse {
+    pub success: bool,
+    pub data: Vec<CurrencyInfo>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct CurrencyInfo {
     id: i32,
     abbreviation: String,
     title: String,
     icon: Url,
     precision: i32,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct MarketResponse {
+    pub success: bool,
+    pub data: Vec<Market>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -26,7 +38,14 @@ pub struct Market {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct CurrencyPairRestrictionResponse {
+    pub success: bool,
+    pub data: Vec<CurrencyPairRestriction>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct CurrencyPairRestriction {
+    pub id: i32,
     pub currency_pair: String,
     pub min_quantity: String,
     pub price_scale: i32,
@@ -43,14 +62,27 @@ pub struct FavouriteErrorResponse {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct TickerResponse {
+    pub success: bool,
+    pub data: Vec<Ticker>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Ticker {
     pk: i32,
     pair: String,
-    last: String,
-    first: String,
-    high: Option<String>,
-    low: Option<String>,
-    volume: Option<String>,
+    last_price: String,
+    first_price: String,
+    high_price: Option<String>,
+    low_price: Option<String>,
+    base_volume: Option<String>,
+    quote_volume: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct OrderResponse {
+    pub success: bool,
+    pub data: Vec<Order>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -73,11 +105,36 @@ pub struct OrderBookFilter {
     pub order_type: Option<OrderType>,
 }
 
-impl OrderBookFilter {
-    pub fn new(pair: Option<CurrencyPair>, order_type: Option<OrderType>) -> Self {
-        Self { pair, order_type }
+#[derive(Default)]
+pub struct OrderBookFilterBuilder {
+    pub pair: Option<CurrencyPair>,
+    pub order_type: Option<OrderType>,
+}
+
+impl OrderBookFilterBuilder {
+    pub fn new() -> Self {
+        Self::default()
     }
 
+    pub fn pair(mut self, pair: CurrencyPair) -> Self {
+        self.pair = Some(pair);
+        self
+    }
+
+    pub fn order_type(mut self, order_type: OrderType) -> Self {
+        self.order_type = Some(order_type);
+        self
+    }
+
+    pub fn build(self) -> OrderBookFilter {
+        OrderBookFilter {
+            pair: self.pair,
+            order_type: self.order_type,
+        }
+    }
+}
+
+impl OrderBookFilter {
     pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(pair) = &self.pair {
             url.query_pairs_mut()
@@ -92,6 +149,12 @@ impl OrderBookFilter {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct OrdersHistoryResponse {
+    pub success: bool,
+    pub data: Vec<OrderHistoryRecord>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OrdersHistory {
     pub next: Option<Url>,
     pub previous: Option<Url>,
@@ -101,14 +164,14 @@ pub struct OrdersHistory {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OrderHistoryRecord {
     pk: i32,
-    #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
+    #[serde(deserialize_with = "crate::models::common::string_timestamp_deserialize")]
     created_at: DateTime<FixedOffset>,
     #[serde(deserialize_with = "crate::models::common::option_timestamp_deserialize")]
     closed_at: Option<DateTime<FixedOffset>>,
-    side: OrderType,
-    volume: String,
-    unit_price: String,
-    sum: String,
+    pub side: OrderType,
+    pub volume: String,
+    pub unit_price: String,
+    pub sum: String,
     pair: String,
 }
 
@@ -145,6 +208,12 @@ impl OrdersFilter {
         }
         url.to_string()
     }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct NewOrderResponse {
+    pub success: bool,
+    pub data: NewOrder,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
