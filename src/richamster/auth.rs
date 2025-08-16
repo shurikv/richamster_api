@@ -1,7 +1,7 @@
 use crate::api::{Api, AuthenticationApi, RequestData, RequestPath};
 use crate::errors::RichamsterError;
-use crate::models::authentication::LoginResponse::{Jwt, RequiresTwoFactor};
-use crate::models::authentication::{
+use crate::models::auth::LoginResponse::{Jwt, RequiresTwoFactor};
+use crate::models::auth::{
     Login, LoginResponse, LoginResponseError, NonFieldsError, OtpLogin, OtpLoginResponse,
     OtpLoginResponseError, RefreshToken, RegisterUser, RegisterUserError, RegisterUserResponse,
     TokenData,

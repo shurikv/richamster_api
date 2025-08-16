@@ -5,9 +5,9 @@ edition = "2021"
 
 [dependencies]
 richamster_api =  { path = ".." }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "json"] }
-tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"]}
-tracing-log = "0.1.4"
-enum-iterator = "1.4.1"
-enum-iterator-derive = "1.2.1"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"]}
+tracing-log = "0.2.0"
+enum-iterator = "1.5.0"
+enum-iterator-derive = "1.4.0"

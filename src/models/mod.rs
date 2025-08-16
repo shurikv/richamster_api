@@ -1,4 +1,4 @@
-pub mod authentication;
+pub mod auth;
 pub mod common;
 pub mod exchange;
 pub mod feedback;

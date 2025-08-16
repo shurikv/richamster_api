@@ -2,7 +2,7 @@ mod menu;
 
 use crate::menu::{Menu, MenuItems};
 use richamster_api::errors::RichamsterError;
-use richamster_api::models::authentication::{LoginResponse, OtpLoginResponse};
+use richamster_api::models::auth::{LoginResponse, OtpLoginResponse};
 use richamster_api::models::user::TransactionsFilter;
 use richamster_api::richamster::auth::Auth;
 use richamster_api::richamster::user::User;

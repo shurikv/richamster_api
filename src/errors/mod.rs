@@ -1,5 +1,5 @@
 use crate::api::token::{CurrencyPair, Token};
-use crate::models::authentication::{
+use crate::models::auth::{
     LoginResponseError, NonFieldsError, OtpLoginResponseError, RegisterUserError,
 };
 use crate::models::exchange::NewOrderError;

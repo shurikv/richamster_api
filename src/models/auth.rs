@@ -93,7 +93,16 @@ pub struct OtpLogin {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OtpLoginResponseError {
-    pub otp_token: Vec<String>,
+    #[serde(rename = "type")]
+    pub error_type: String,
+    pub errors: Vec<CommonError>
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct CommonError {
+    pub code: String,
+    pub detail: String,
+    pub attr: String,
 }
 
 impl Display for OtpLoginResponseError {
