@@ -2,7 +2,7 @@ use crate::models::common::TransactionType::{
     Conversion, Dividends, NftAuction, OtcTransfer, Referral, Replenish, Staking, Transfer,
     Unknown, Withdrawal,
 };
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, Local, TimeZone};
 use serde::{Deserialize, Deserializer};
 use serde_derive::Serialize;
 use strum_macros::Display;
@@ -97,19 +97,22 @@ where
 
 pub fn string_timestamp_deserialize<'de, D>(
     deserializer: D,
-) -> Result<DateTime<FixedOffset>, D::Error>
+) -> Result<DateTime<Local>, D::Error>
 where
     D: Deserializer<'de>,
 {
     let timestamp: Option<String> = Deserialize::deserialize(deserializer)?;
-    let datetime =
-        DateTime::parse_from_str(&timestamp.unwrap(), "%s").map_err(serde::de::Error::custom)?;
-    Ok(datetime)
+    if timestamp.is_none() {
+        return Err(serde::de::Error::custom("Timestamp is None"));
+    }
+    let date_time = DateTime::from_timestamp(timestamp.unwrap().parse().unwrap(), 0).unwrap();
+    let local_datetime = Local.from_utc_datetime(&date_time.naive_utc());
+    Ok(local_datetime)
 }
 
 pub fn option_timestamp_deserialize<'de, D>(
     deserializer: D,
-) -> Result<Option<DateTime<FixedOffset>>, D::Error>
+) -> Result<Option<DateTime<Local>>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -117,9 +120,9 @@ where
     if timestamp.is_none() {
         return Ok(None);
     }
-    let datetime =
-        DateTime::parse_from_str(&timestamp.unwrap(), "%s").map_err(serde::de::Error::custom)?;
-    Ok(Some(datetime))
+    let date_time = DateTime::from_timestamp(timestamp.unwrap().parse().unwrap(), 0).unwrap();
+    let local_datetime = Local.from_utc_datetime(&date_time.naive_utc());
+    Ok(Some(local_datetime))
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
