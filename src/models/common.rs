@@ -95,6 +95,18 @@ where
     Ok(DateTime::from(dt))
 }
 
+pub fn date_string_deserialize<'de, D>(deserializer: D) -> Result<Option<DateTime<Local>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    let result = opt
+        .as_deref()
+        .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+        .map(|dt| dt.with_timezone(&Local));
+    Ok(result)
+}
+
 pub fn string_timestamp_deserialize<'de, D>(
     deserializer: D,
 ) -> Result<DateTime<Local>, D::Error>

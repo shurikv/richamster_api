@@ -224,10 +224,12 @@ pub struct NewOrder {
     pub unit_price: String,
     pub currency_pair: String,
     pub commission: Option<String>,
-    pub closed_at: Option<String>,
+    #[serde(deserialize_with = "crate::models::common::date_string_deserialize")]
+    pub closed_at: Option<DateTime<Local>>,
     #[serde(rename = "type")]
     pub o_type: Option<OrderType>,
-    pub created_at: Option<String>,
+    #[serde(deserialize_with = "crate::models::common::date_string_deserialize")]
+    pub created_at: Option<DateTime<Local>>,
     pub is_partial: Option<bool>,
 }
 
