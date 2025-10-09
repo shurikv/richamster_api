@@ -257,12 +257,17 @@ impl NewOrder {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct NewOrderError {
-    amount: Option<Vec<String>>,
-    unit_price: Option<Vec<String>>,
-    currency_pair: Option<Vec<String>>,
     #[serde(rename = "type")]
-    order_type: Option<Vec<String>>,
-    non_field_errors: Option<Vec<String>>,
+    order_type: String,
+    errors: Vec<OrderError>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct OrderError
+{
+    code: String,
+    detail: String,
+    attr: String,
 }
 
 impl Display for NewOrderError {
