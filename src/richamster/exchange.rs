@@ -3,9 +3,11 @@ use crate::api::token::CurrencyPair;
 use crate::api::{Api, RequestPath};
 use crate::api::{RequestData, token};
 use crate::errors::RichamsterError;
+use crate::models::common::OrderType;
 use crate::models::exchange::{
-    CurrencyInfoResponse, CurrencyPairRestriction, FavouritePairResponse, MarketResponse, NewOrder,
-    NewOrderError, OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, TickerResponse,
+    CurrencyInfoResponse, CurrencyPairRestriction, FavouritePairResponse, Market, MarketOrderInfo,
+    MarketOrderResponse, NewOrder, NewOrderError, OrderBookFilter, OrdersBook, OrdersFilter,
+    OrdersHistory, TickerResponse,
 };
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::{process_response, send_request};
@@ -64,7 +66,6 @@ impl Exchange {
     ) -> Result<FavouritePairResponse, RichamsterError> {
         let market_list = self.markets_list().await?;
         let market = if let Some(m) = market_list
-            .data
             .iter()
             .find(|m| m.abbreviation == pair.to_string())
         {
@@ -94,10 +95,10 @@ impl Exchange {
         process_response!(resp, CurrencyInfoResponse)
     }
 
-    pub async fn markets_list(&self) -> Result<MarketResponse, RichamsterError> {
+    pub async fn markets_list(&self) -> Result<Vec<Market>, RichamsterError> {
         let RequestData(url, method) = Api::Exchange(ExchangeApi::Markets).request_data();
         let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, MarketResponse)
+        process_response!(resp, Vec<Market>)
     }
 
     pub async fn order_book(&self, filter: OrderBookFilter) -> Result<OrdersBook, RichamsterError> {
@@ -162,6 +163,58 @@ impl Exchange {
             StatusCode::CREATED => {
                 let response_string = resp.text().await?;
                 let response: NewOrder = serde_json::from_str(&response_string)?;
+                Ok(response)
+            }
+            StatusCode::UNAUTHORIZED => Err(RichamsterError::UnauthorizedAccess),
+            StatusCode::BAD_REQUEST => {
+                let response_string = resp.text().await?;
+                let response: NewOrderError = serde_json::from_str(&response_string)?;
+                Err(RichamsterError::NewOrderError(response))
+            }
+            status => {
+                let response_string = resp.text().await?;
+                Err(RichamsterError::UnsupportedResponseCode(
+                    status,
+                    response_string,
+                ))
+            }
+        }
+    }
+
+    pub async fn execute_market_order(
+        &self,
+        pair: CurrencyPair,
+        amount: f64,
+        order_type: OrderType,
+    ) -> Result<MarketOrderResponse, RichamsterError> {
+        let market_list = self.markets_list().await?;
+        let market = if let Some(m) = market_list
+            .iter()
+            .find(|m| m.abbreviation == pair.to_string())
+        {
+            m
+        } else {
+            return Err(RichamsterError::IllegalCurrencyPair(pair));
+        };
+
+        let RequestData(url, method) =
+            Api::Exchange(ExchangeApi::ExecuteMarketOrder).request_data();
+        let market_order = MarketOrderInfo {
+            amount: amount.to_string(),
+            currency_pair: market.id,
+            order_type,
+            total: None,
+        };
+        let resp = send_request!(
+            url,
+            method,
+            self.auth_state,
+            serde_json::to_string(&market_order)?
+        );
+        match resp.status() {
+            StatusCode::CREATED | StatusCode::OK => {
+                let response_string = resp.text().await?;
+                let response: MarketOrderResponse = serde_json::from_str(&response_string)?;
                 Ok(response)
             }
             StatusCode::UNAUTHORIZED => Err(RichamsterError::UnauthorizedAccess),

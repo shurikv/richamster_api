@@ -19,7 +19,7 @@ pub struct Currency {
     pub can_output: bool,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Debug, Display)]
+#[derive(Serialize, Deserialize, PartialEq, Copy, Clone, Debug, Display)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")]
 pub enum OrderType {
@@ -107,9 +107,7 @@ where
     Ok(result)
 }
 
-pub fn string_timestamp_deserialize<'de, D>(
-    deserializer: D,
-) -> Result<DateTime<Local>, D::Error>
+pub fn string_timestamp_deserialize<'de, D>(deserializer: D) -> Result<DateTime<Local>, D::Error>
 where
     D: Deserializer<'de>,
 {

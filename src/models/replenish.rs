@@ -1,5 +1,5 @@
-use serde_derive::{Deserialize, Serialize};
 use crate::models::common::Currency;
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct P2PReplenish {

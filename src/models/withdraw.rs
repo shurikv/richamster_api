@@ -1,6 +1,6 @@
-use std::fmt::{Display, Formatter};
-use serde_derive::{Deserialize, Serialize};
 use crate::models::common::CurrencyChannel;
+use serde_derive::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct WithdrawInfoResponse {

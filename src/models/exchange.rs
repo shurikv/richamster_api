@@ -34,7 +34,7 @@ pub struct Market {
     pub abbreviation: String,
     pub volume: f64,
     pub price_deviation: i32,
-    pub last_price: f64,
+    pub last_price: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -92,6 +92,16 @@ pub struct Order {
     pub sum: String,
     pub side: OrderType,
     pub pair: String,
+}
+
+impl Display for Order {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Order [pair: {}, side: {:?}, volume: {}, unit_price: {}, sum: {}]",
+            self.pair, self.side, self.volume, self.unit_price, self.sum
+        )
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -263,8 +273,7 @@ pub struct NewOrderError {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct OrderError
-{
+pub struct OrderError {
     code: String,
     detail: String,
     attr: String,
@@ -278,17 +287,16 @@ impl Display for NewOrderError {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct MarketOrderInfo {
-    amount: String,
-    currency_pair: String,
+    pub amount: String,
+    pub currency_pair: i32,
     #[serde(rename = "type")]
-    order_type: OrderType,
-    total: String,
+    pub order_type: OrderType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub total: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct MarketOrderParameters {
-    pub amount: String,
-    pub currency_pair: String,
-    pub order_type: OrderType,
-    pub total: String,
+pub struct MarketOrderResponse {
+    pub total_sum: f32,
+    pub in_orders: i32,
 }

@@ -1,7 +1,10 @@
 use crate::api::token::Token;
 use crate::api::{Api, RequestData, RequestPath, WithdrawApi};
 use crate::errors::RichamsterError;
-use crate::models::withdraw::{WithdrawData, WithdrawDetailError, WithdrawError, WithdrawFieldError, WithdrawInfoResponse, WithdrawResponse};
+use crate::models::withdraw::{
+    WithdrawData, WithdrawDetailError, WithdrawError, WithdrawFieldError, WithdrawInfoResponse,
+    WithdrawResponse,
+};
 use crate::richamster::common;
 use crate::richamster::common::AuthState;
 use crate::richamster::common::HeaderCompose;

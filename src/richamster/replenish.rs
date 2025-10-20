@@ -1,13 +1,13 @@
 use crate::api::token::Token;
 use crate::api::{Api, ReplenishApi, RequestData, RequestPath};
 use crate::errors::RichamsterError;
+use crate::models::common::CurrencyChannel;
 use crate::models::replenish::{P2PReplenish, ReplenishInfo};
 use crate::richamster::common;
 use crate::richamster::common::{AuthState, HeaderCompose};
 use crate::send_request;
 use reqwest::StatusCode;
 use secrecy::SecretBox;
-use crate::models::common::CurrencyChannel;
 
 pub struct Replenish {
     auth_state: AuthState,
@@ -31,7 +31,11 @@ impl Replenish {
 }
 
 impl Replenish {
-    pub async fn replenish_info(&self, currency_name: Token, currency_channel: String) -> Result<ReplenishInfo, RichamsterError> {
+    pub async fn replenish_info(
+        &self,
+        currency_name: Token,
+        currency_channel: String,
+    ) -> Result<ReplenishInfo, RichamsterError> {
         let RequestData(url, method) = Api::Replenish(ReplenishApi::ReplenishInfo).request_data();
         let path = format!("{}/{}/", currency_name.as_ref(), currency_channel);
         let url = url.join(&path)?;
@@ -44,7 +48,8 @@ impl Replenish {
             }
             StatusCode::UNAUTHORIZED => Err(RichamsterError::UnauthorizedAccess),
             StatusCode::NOT_FOUND => Err(RichamsterError::ReplenishInfoNotFound(
-                currency_name, currency_channel,
+                currency_name,
+                currency_channel,
             )),
             status => Err(RichamsterError::UnsupportedResponseCode(
                 status,
@@ -53,8 +58,12 @@ impl Replenish {
         }
     }
 
-    pub async fn replenish_channels_info(&self, currency_name: Token) -> Result<Vec<CurrencyChannel>, RichamsterError> {
-        let RequestData(mut url, method) = Api::Replenish(ReplenishApi::ReplenishChannelsInfo).request_data();
+    pub async fn replenish_channels_info(
+        &self,
+        currency_name: Token,
+    ) -> Result<Vec<CurrencyChannel>, RichamsterError> {
+        let RequestData(mut url, method) =
+            Api::Replenish(ReplenishApi::ReplenishChannelsInfo).request_data();
         url = url.join(currency_name.as_ref())?;
         let resp = send_request!(url, method, self.auth_state);
         match resp.status() {
@@ -71,9 +80,17 @@ impl Replenish {
         }
     }
 
-    pub async fn replenish_p2p(&self, replenish: P2PReplenish) -> Result<P2PReplenish, RichamsterError> {
+    pub async fn replenish_p2p(
+        &self,
+        replenish: P2PReplenish,
+    ) -> Result<P2PReplenish, RichamsterError> {
         let RequestData(url, method) = Api::Replenish(ReplenishApi::P2PReplenish).request_data();
-        let resp = send_request!(url, method, self.auth_state, serde_json::to_string(&replenish)?);
+        let resp = send_request!(
+            url,
+            method,
+            self.auth_state,
+            serde_json::to_string(&replenish)?
+        );
         match resp.status() {
             StatusCode::CREATED => {
                 let string = resp.text().await?;

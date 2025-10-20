@@ -95,7 +95,7 @@ pub struct OtpLogin {
 pub struct OtpLoginResponseError {
     #[serde(rename = "type")]
     pub error_type: String,
-    pub errors: Vec<CommonError>
+    pub errors: Vec<CommonError>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]

@@ -4,10 +4,10 @@ use crate::models::auth::{
 };
 use crate::models::exchange::NewOrderError;
 use crate::models::feedback::ContactUsError;
+use crate::models::withdraw::WithdrawError;
 use reqwest::StatusCode;
 use thiserror::Error;
 use url::ParseError;
-use crate::models::withdraw::WithdrawError;
 
 #[derive(Error, Debug)]
 pub enum RichamsterError {
@@ -46,5 +46,5 @@ pub enum RichamsterError {
     #[error("Creation order error: {0}")]
     NewOrderError(NewOrderError),
     #[error("Replenish info not found for token: {0}, id: {1}")]
-    ReplenishInfoNotFound(Token, String)
+    ReplenishInfoNotFound(Token, String),
 }
