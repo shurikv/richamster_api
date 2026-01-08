@@ -5,9 +5,9 @@ use crate::api::{RequestData, token};
 use crate::errors::RichamsterError;
 use crate::models::common::OrderType;
 use crate::models::exchange::{
-    CurrencyInfoResponse, CurrencyPairRestriction, FavouritePairResponse, Market, MarketOrderInfo,
-    MarketOrderResponse, NewOrder, NewOrderError, OrderBookFilter, OrdersBook, OrdersFilter,
-    OrdersHistory, TickerResponse,
+    CurrencyInfoResponse, CurrencyPairRestriction, FavouritePairResponse, Market,
+    MarketOrderCalculator, MarketOrderInfo, MarketOrderResponse, NewOrder, NewOrderError,
+    OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, TickerResponse,
 };
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::{process_response, send_request};
@@ -181,11 +181,61 @@ impl Exchange {
         }
     }
 
+    pub async fn calculate_market_order(
+        &self,
+        pair: CurrencyPair,
+        amount: f64,
+        order_type: OrderType,
+    ) -> Result<MarketOrderCalculator, RichamsterError> {
+        let market_list = self.markets_list().await?;
+        let market = if let Some(m) = market_list
+            .iter()
+            .find(|m| m.abbreviation == pair.to_string())
+        {
+            m
+        } else {
+            return Err(RichamsterError::IllegalCurrencyPair(pair));
+        };
+
+        let RequestData(mut url, method) =
+            Api::Exchange(ExchangeApi::CalculateMarketOrder).request_data();
+        let market_order = MarketOrderInfo {
+            amount: amount.to_string(),
+            currency_pair: market.id,
+            order_type,
+            total: None,
+        };
+        market_order.compose_url(&mut url);
+        let resp = send_request!(url, method, self.auth_state);
+        match resp.status() {
+            StatusCode::CREATED | StatusCode::OK => {
+                let response_string = resp.text().await?;
+                println!("response: {:?}", response_string);
+                let response: MarketOrderCalculator = serde_json::from_str(&response_string)?;
+                Ok(response)
+            }
+            StatusCode::UNAUTHORIZED => Err(RichamsterError::UnauthorizedAccess),
+            StatusCode::BAD_REQUEST => {
+                let response_string = resp.text().await?;
+                let response: NewOrderError = serde_json::from_str(&response_string)?;
+                Err(RichamsterError::NewOrderError(response))
+            }
+            status => {
+                let response_string = resp.text().await?;
+                Err(RichamsterError::UnsupportedResponseCode(
+                    status,
+                    response_string,
+                ))
+            }
+        }
+    }
+
     pub async fn execute_market_order(
         &self,
         pair: CurrencyPair,
         amount: f64,
         order_type: OrderType,
+        total: Option<f64>,
     ) -> Result<MarketOrderResponse, RichamsterError> {
         let market_list = self.markets_list().await?;
         let market = if let Some(m) = market_list
@@ -197,23 +247,30 @@ impl Exchange {
             return Err(RichamsterError::IllegalCurrencyPair(pair));
         };
 
+        let total = total.map(|t| t.to_string());
         let RequestData(url, method) =
             Api::Exchange(ExchangeApi::ExecuteMarketOrder).request_data();
         let market_order = MarketOrderInfo {
             amount: amount.to_string(),
             currency_pair: market.id,
             order_type,
-            total: None,
+            total,
         };
+        println!(
+            "Serialize order: {:?}",
+            serde_json::to_string(&market_order)
+        );
         let resp = send_request!(
             url,
             method,
             self.auth_state,
             serde_json::to_string(&market_order)?
         );
+        println!("status: {:?}", resp.status());
         match resp.status() {
             StatusCode::CREATED | StatusCode::OK => {
                 let response_string = resp.text().await?;
+                println!("response: {:?}", response_string);
                 let response: MarketOrderResponse = serde_json::from_str(&response_string)?;
                 Ok(response)
             }

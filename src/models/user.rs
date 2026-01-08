@@ -1,8 +1,7 @@
 use crate::api::token::{CurrencyPair, Token};
 use crate::models::common::{Currency, OrderType, TransactionStatus, TransactionType};
-use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Deserializer};
-use serde_derive::Serialize;
+use chrono::{DateTime, Local};
+use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use url::Url;
 
@@ -79,36 +78,45 @@ impl Display for UserDetail {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct UserTransactionResponce {
+    pub count: i32,
+    pub next: Option<String>,
+    pub prev: Option<String>,
+    pub results: Vec<UserTransaction>,
+    pub page_count: i32,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct UserTransaction {
-    #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
-    pub created_at: DateTime<FixedOffset>,
-    #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
-    pub closed_at: DateTime<FixedOffset>,
+    #[serde(deserialize_with = "crate::models::deserialize::string_timestamp_deserialize")]
+    pub created_at: DateTime<Local>,
+    #[serde(deserialize_with = "crate::models::deserialize::timestamp_deserialize")]
+    pub closed_at: DateTime<Local>,
     pub status: TransactionStatus,
     #[serde(rename = "type")]
-    #[serde(deserialize_with = "transaction_type_deserialize")]
     pub transaction_type: TransactionType,
     pub currency: String,
     pub sum: String,
     pub fee: String,
     pub balance: String,
     pub hash: String,
+    pub explorer_link: String,
 }
 
-fn transaction_type_deserialize<'de, D>(deserializer: D) -> Result<TransactionType, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let transaction_type: i32 = Deserialize::deserialize(deserializer)?;
-    let tr_type: TransactionType = transaction_type.into();
-    Ok(tr_type)
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct UserOrderResponse {
+    pub count: i32,
+    pub next: Option<String>,
+    pub previous: Option<String>,
+    pub results: Vec<UserOrder>,
+    pub page_count: i32,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct UserOrder {
     pub pk: i32,
-    #[serde(deserialize_with = "crate::models::common::timestamp_deserialize")]
-    pub closed_at: DateTime<FixedOffset>,
+    #[serde(deserialize_with = "crate::models::deserialize::timestamp_deserialize")]
+    pub closed_at: DateTime<Local>,
     #[serde(rename = "type")]
     pub order_type: OrderType,
     pub unit_price: String,
@@ -125,6 +133,7 @@ pub struct TransactionsFilter {
     pub closed_at_gte: Option<i32>,
     pub closed_at_lte: Option<i32>,
 }
+
 impl TransactionsFilter {
     pub fn compose_url(&self, url: &mut Url) -> String {
         if let Some(token) = &self.currency {
@@ -152,8 +161,13 @@ impl TransactionsFilter {
 pub struct UserOrdersFilter {
     pub pair: Option<CurrencyPair>,
     pub order_type: Option<OrderType>,
-    pub closed_at_gte: Option<i32>,
-    pub closed_at_lte: Option<i32>,
+    pub closed_at_gte: Option<i64>,
+    pub closed_at_lte: Option<i64>,
+    pub closed_at_time_gte: Option<i64>,
+    pub closed_at_time_lte: Option<i64>,
+    pub closed_at_time_gt: Option<i64>,
+    pub page: Option<i32>,
+    pub page_size: Option<i32>,
 }
 
 impl UserOrdersFilter {
@@ -172,24 +186,109 @@ impl UserOrdersFilter {
             order_type: Some(order_type),
             closed_at_gte: self.closed_at_gte,
             closed_at_lte: self.closed_at_lte,
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: self.page,
+            page_size: self.page_size,
         }
     }
 
-    pub fn closed_at_gte(self, closed_at_gte: i32) -> Self {
+    pub fn closed_at_gte(self, closed_at_gte: i64) -> Self {
         Self {
             pair: self.pair,
             order_type: self.order_type,
             closed_at_gte: Some(closed_at_gte),
             closed_at_lte: self.closed_at_lte,
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: self.page,
+            page_size: self.page_size,
         }
     }
 
-    pub fn closed_at_lte(self, closed_at_lte: i32) -> Self {
+    pub fn closed_at_lte(self, closed_at_lte: i64) -> Self {
         Self {
             pair: self.pair,
             order_type: self.order_type,
             closed_at_gte: self.closed_at_gte,
             closed_at_lte: Some(closed_at_lte),
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: self.page,
+            page_size: self.page_size,
+        }
+    }
+
+    pub fn closed_at_time_gte(self, closed_at_time_gte: i64) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: self.closed_at_lte,
+            closed_at_time_gte: Some(closed_at_time_gte),
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: self.page,
+            page_size: self.page_size,
+        }
+    }
+
+    pub fn closed_at_time_lte(self, closed_at_time_lte: i64) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: self.closed_at_lte,
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_lte: Some(closed_at_time_lte),
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: self.page,
+            page_size: self.page_size,
+        }
+    }
+
+    pub fn closed_at_time_gt(self, closed_at_time_gt: i64) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: self.closed_at_lte,
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gt: Some(closed_at_time_gt),
+            page: self.page,
+            page_size: self.page_size,
+        }
+    }
+
+    pub fn page(self, page: i32) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: self.closed_at_lte,
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: Some(page),
+            page_size: self.page_size,
+        }
+    }
+
+    pub fn page_size(self, page_size: i32) -> Self {
+        Self {
+            pair: self.pair,
+            order_type: self.order_type,
+            closed_at_gte: self.closed_at_gte,
+            closed_at_lte: self.closed_at_lte,
+            closed_at_time_gte: self.closed_at_time_gte,
+            closed_at_time_lte: self.closed_at_time_lte,
+            closed_at_time_gt: self.closed_at_time_gt,
+            page: self.page,
+            page_size: Some(page_size),
         }
     }
 
@@ -209,6 +308,30 @@ impl UserOrdersFilter {
         if let Some(closed_at_lte) = &self.closed_at_lte {
             url.query_pairs_mut()
                 .append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
+        }
+        if let Some(closed_at_time_gte) = &self.closed_at_time_gte {
+            url.query_pairs_mut().append_pair(
+                "closed_at_time_gte",
+                closed_at_time_gte.to_string().as_str(),
+            );
+        }
+        if let Some(closed_at_time_lte) = &self.closed_at_time_lte {
+            url.query_pairs_mut().append_pair(
+                "closed_at_time_lte",
+                closed_at_time_lte.to_string().as_str(),
+            );
+        }
+        if let Some(closed_at_time_gt) = &self.closed_at_time_gt {
+            url.query_pairs_mut()
+                .append_pair("closed_at_time_gt", closed_at_time_gt.to_string().as_str());
+        }
+        if let Some(page) = &self.page {
+            url.query_pairs_mut()
+                .append_pair("page", page.to_string().as_str());
+        }
+        if let Some(page_size) = &self.page_size {
+            url.query_pairs_mut()
+                .append_pair("page_size", page_size.to_string().as_str());
         }
         url.to_string()
     }

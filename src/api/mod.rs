@@ -27,7 +27,7 @@ pub enum ExchangeApi {
     TickerList,
     UserOrders,
     NewOrder,
-    MarketOrder,
+    CalculateMarketOrder,
     ExecuteMarketOrder,
     DestroyOrder,
 }
@@ -101,7 +101,7 @@ impl RequestPath for Api {
                 ExchangeApi::NewOrder => {
                     RequestData(self.full_url("exchange/user/orders/"), Method::POST)
                 }
-                ExchangeApi::MarketOrder => {
+                ExchangeApi::CalculateMarketOrder => {
                     RequestData(self.full_url("exchange/user/orders/market/"), Method::GET)
                 }
                 ExchangeApi::ExecuteMarketOrder => {
@@ -168,7 +168,7 @@ mod test {
 
     #[test]
     fn exchange_join_path() {
-        let req_data = Api::Exchange(ExchangeApi::MarketOrder).request_data();
+        let req_data = Api::Exchange(ExchangeApi::CalculateMarketOrder).request_data();
         assert_eq!(
             percent_decode_str(req_data.0.as_str()).decode_utf8_lossy(),
             "https://richamster.com/public/v1/exchange/user/orders/market/"

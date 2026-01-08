@@ -3,8 +3,8 @@ use crate::api::{Api, RequestPath};
 use crate::api::{RequestData, token};
 use crate::errors::RichamsterError;
 use crate::models::user::{
-    TransactionsFilter, TransferQuery, UserBalance, UserDetail, UserOrder, UserOrdersFilter,
-    UserTransaction,
+    TransactionsFilter, TransferQuery, UserBalance, UserDetail, UserOrderResponse,
+    UserOrdersFilter, UserTransactionResponce,
 };
 use crate::richamster::common;
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
@@ -71,19 +71,20 @@ impl User {
     pub async fn transactions_list(
         &self,
         parameters: TransactionsFilter,
-    ) -> Result<Vec<UserTransaction>, RichamsterError> {
+    ) -> Result<UserTransactionResponce, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Transactions).request_data();
         let url = parameters.compose_url(&mut url);
         let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, Vec<UserTransaction>)
+        process_response!(resp, UserTransactionResponce)
     }
 
     pub async fn orders(
         &self,
         parameters: UserOrdersFilter,
-    ) -> Result<Vec<UserOrder>, RichamsterError> {
+    ) -> Result<UserOrderResponse, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Orders).request_data();
         let url = parameters.compose_url(&mut url);
+        println!("Composed URL: {}", url);
         let resp = send_request!(url, method, self.auth_state);
         let string = resp.text().await?;
         Ok(serde_json::from_str(&string)?)

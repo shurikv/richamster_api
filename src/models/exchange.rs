@@ -1,8 +1,7 @@
 use crate::api::token::CurrencyPair;
 use crate::models::common::OrderType;
 use chrono::{DateTime, Local};
-use serde::Deserialize;
-use serde_derive::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use url::Url;
 
@@ -174,9 +173,9 @@ pub struct OrdersHistory {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OrderHistoryRecord {
     pk: i32,
-    #[serde(deserialize_with = "crate::models::common::string_timestamp_deserialize")]
+    #[serde(deserialize_with = "crate::models::deserialize::string_timestamp_deserialize")]
     pub created_at: DateTime<Local>,
-    #[serde(deserialize_with = "crate::models::common::option_timestamp_deserialize")]
+    #[serde(deserialize_with = "crate::models::deserialize::option_timestamp_deserialize")]
     pub closed_at: Option<DateTime<Local>>,
     pub side: OrderType,
     pub volume: String,
@@ -234,11 +233,11 @@ pub struct NewOrder {
     pub unit_price: String,
     pub currency_pair: String,
     pub commission: Option<String>,
-    #[serde(deserialize_with = "crate::models::common::date_string_deserialize")]
+    #[serde(deserialize_with = "crate::models::deserialize::date_string_deserialize")]
     pub closed_at: Option<DateTime<Local>>,
     #[serde(rename = "type")]
     pub o_type: Option<OrderType>,
-    #[serde(deserialize_with = "crate::models::common::date_string_deserialize")]
+    #[serde(deserialize_with = "crate::models::deserialize::date_string_deserialize")]
     pub created_at: Option<DateTime<Local>>,
     pub is_partial: Option<bool>,
 }
@@ -297,6 +296,32 @@ pub struct MarketOrderInfo {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct MarketOrderResponse {
-    pub total_sum: f32,
+    pub total_sum: MarketOrderTotal,
     pub in_orders: i32,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+#[serde(untagged)]
+pub enum MarketOrderTotal {
+    String(String),
+    F64(f64),
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
+pub struct MarketOrderCalculator {
+    pub average_price: f64,
+    pub covered: f64,
+    pub total_sum: f64,
+}
+
+impl MarketOrderInfo {
+    pub fn compose_url(&self, url: &mut Url) -> String {
+        url.query_pairs_mut()
+            .append_pair("currency_pair", self.currency_pair.to_string().as_str());
+        url.query_pairs_mut()
+            .append_pair("type", self.order_type.to_string().as_str());
+        url.query_pairs_mut()
+            .append_pair("amount", self.amount.as_str());
+        url.to_string()
+    }
 }
