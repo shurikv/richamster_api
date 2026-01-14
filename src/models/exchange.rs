@@ -110,13 +110,13 @@ pub struct OrdersBook {
 }
 
 pub struct OrderBookFilter {
-    pub pair: Option<CurrencyPair>,
+    pub pair: CurrencyPair,
     pub order_type: Option<OrderType>,
 }
 
 #[derive(Default)]
 pub struct OrderBookFilterBuilder {
-    pub pair: Option<CurrencyPair>,
+    pub pair: CurrencyPair,
     pub order_type: Option<OrderType>,
 }
 
@@ -126,7 +126,7 @@ impl OrderBookFilterBuilder {
     }
 
     pub fn pair(mut self, pair: CurrencyPair) -> Self {
-        self.pair = Some(pair);
+        self.pair = pair;
         self
     }
 
@@ -145,10 +145,8 @@ impl OrderBookFilterBuilder {
 
 impl OrderBookFilter {
     pub fn compose_url(&self, url: &mut Url) -> String {
-        if let Some(pair) = &self.pair {
-            url.query_pairs_mut()
-                .append_pair("pair", pair.to_string().as_str());
-        }
+        url.query_pairs_mut()
+            .append_pair("pair", &self.pair.to_string().as_str());
         if let Some(order_type) = &self.order_type {
             url.query_pairs_mut()
                 .append_pair("side", order_type.to_string().to_lowercase().as_str());
