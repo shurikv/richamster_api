@@ -34,7 +34,6 @@ pub enum TransactionStatus {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug)]
-// #[serde(rename_all = "camelCase")]
 pub enum TransactionType {
     Replenish,
     Withdrawal,

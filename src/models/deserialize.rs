@@ -1,4 +1,3 @@
-use crate::models::common::TransactionType;
 use chrono::{DateTime, Local, TimeZone};
 use serde::{Deserialize, Deserializer};
 
@@ -51,13 +50,4 @@ where
     let date_time = DateTime::from_timestamp(timestamp.unwrap().parse().unwrap(), 0).unwrap();
     let local_datetime = Local.from_utc_datetime(&date_time.naive_utc());
     Ok(Some(local_datetime))
-}
-
-fn transaction_type_deserialize<'de, D>(deserializer: D) -> Result<TransactionType, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let transaction_type: i32 = serde::Deserialize::deserialize(deserializer)?;
-    let tr_type: TransactionType = transaction_type.into();
-    Ok(tr_type)
 }
