@@ -149,10 +149,8 @@ impl Exchange {
         let url = filter.compose_url(&mut url);
         let resp = send_request!(url, method, self.auth_state);
         let string = resp.text().await?;
-        println!("user_orders: {}", string);
         let response: OrdersHistory = serde_json::from_str(&string)?;
         Ok(response)
-        // process_response!(resp, OrdersHistory)
     }
 
     pub async fn create_order(&self, order: NewOrder) -> Result<NewOrder, RichamsterError> {
