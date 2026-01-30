@@ -39,6 +39,7 @@ pub enum Token {
     NFT,
     SOL,
     XAUT,
+    WLD,
 }
 
 impl FromStr for Token {
@@ -80,6 +81,7 @@ impl FromStr for Token {
             "NFT" => Ok(Token::NFT),
             "SOL" => Ok(Token::SOL),
             "XAUT" => Ok(Token::XAUT),
+            "WLD" => Ok(Token::WLD),
             token => Err(TokenError::InvalidToken(token.to_owned())),
         }
     }

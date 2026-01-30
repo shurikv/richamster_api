@@ -84,7 +84,6 @@ impl User {
     ) -> Result<UserOrderResponse, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Orders).request_data();
         let url = parameters.compose_url(&mut url);
-        println!("Composed URL: {}", url);
         let resp = send_request!(url, method, self.auth_state);
         let string = resp.text().await?;
         Ok(serde_json::from_str(&string)?)
