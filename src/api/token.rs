@@ -3,7 +3,8 @@ use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use strum_macros::AsRefStr;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, AsRefStr, Hash, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, AsRefStr, Hash, Eq, strum_macros::Display, strum_macros::EnumString)]
+#[strum(ascii_case_insensitive)]
 pub enum Token {
     FSH,
     TON,
@@ -42,56 +43,6 @@ pub enum Token {
     WLD,
 }
 
-impl FromStr for Token {
-    type Err = TokenError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_uppercase().as_str() {
-            "FSH" => Ok(Token::FSH),
-            "TON" => Ok(Token::TON),
-            "UAHT" => Ok(Token::UAHT),
-            "AAVE" => Ok(Token::AAVE),
-            "HCK" => Ok(Token::HCK),
-            "TRX" => Ok(Token::TRX),
-            "CRO" => Ok(Token::CRO),
-            "VQR" => Ok(Token::VQR),
-            "SHIB" => Ok(Token::SHIB),
-            "TLR" => Ok(Token::TLR),
-            "LINK" => Ok(Token::LINK),
-            "POL" => Ok(Token::POL),
-            "UNI" => Ok(Token::UNI),
-            "USDC" => Ok(Token::USDC),
-            "BAT" => Ok(Token::BAT),
-            "USDT" => Ok(Token::USDT),
-            "RCH" => Ok(Token::RCH),
-            "BOX" => Ok(Token::BOX),
-            "XMR" => Ok(Token::XMR),
-            "DASH" => Ok(Token::DASH),
-            "KUB" => Ok(Token::KUB),
-            "WAVES" => Ok(Token::WAVES),
-            "ADA" => Ok(Token::ADA),
-            "ETH" => Ok(Token::ETH),
-            "DOGE" => Ok(Token::DOGE),
-            "KRB" => Ok(Token::KRB),
-            "UAH" => Ok(Token::UAH),
-            "BTC" => Ok(Token::BTC),
-            "LTC" => Ok(Token::LTC),
-            "TAL" => Ok(Token::TAL),
-            "DOT" => Ok(Token::DOT),
-            "NFT" => Ok(Token::NFT),
-            "SOL" => Ok(Token::SOL),
-            "XAUT" => Ok(Token::XAUT),
-            "WLD" => Ok(Token::WLD),
-            token => Err(TokenError::InvalidToken(token.to_owned())),
-        }
-    }
-}
-
-impl Display for Token {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.as_ref())
-    }
-}
 #[derive(Debug)]
 pub enum TokenError {
     InvalidToken(String),
