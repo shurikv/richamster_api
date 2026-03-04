@@ -2,8 +2,21 @@ use serde_derive::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use strum_macros::AsRefStr;
+use thiserror::Error;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Copy, Debug, AsRefStr, Hash, Eq, strum_macros::Display, strum_macros::EnumString)]
+#[derive(
+    Serialize,
+    Deserialize,
+    PartialEq,
+    Clone,
+    Copy,
+    Debug,
+    AsRefStr,
+    Hash,
+    Eq,
+    strum_macros::Display,
+    strum_macros::EnumString,
+)]
 #[strum(ascii_case_insensitive)]
 pub enum Token {
     FSH,
@@ -43,8 +56,9 @@ pub enum Token {
     WLD,
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum TokenError {
+    #[error("Invalid token: {0}")]
     InvalidToken(String),
 }
 

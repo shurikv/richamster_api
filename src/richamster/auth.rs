@@ -1,4 +1,4 @@
-use crate::api::{Api, AuthenticationApi, RequestData, RequestPath};
+use crate::api::{Api, AuthenticationApi, CLIENT, RequestData, RequestPath};
 use crate::errors::RichamsterError;
 use crate::models::auth::LoginResponse::{Jwt, RequiresTwoFactor};
 use crate::models::auth::{
@@ -6,7 +6,7 @@ use crate::models::auth::{
     OtpLoginResponseError, RefreshToken, RegisterUser, RegisterUserError, RegisterUserResponse,
     TokenData,
 };
-use reqwest::{Client, IntoUrl, Method, Response, StatusCode};
+use reqwest::{IntoUrl, Method, Response, StatusCode};
 use serde::Serialize;
 
 pub struct Auth;
@@ -17,7 +17,7 @@ impl Auth {
         method: Method,
         body: impl Serialize,
     ) -> Result<Response, reqwest::Error> {
-        Client::new().request(method, url).json(&body).send().await
+        CLIENT.request(method, url).json(&body).send().await
     }
 
     pub async fn login(

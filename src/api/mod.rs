@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use reqwest::Method;
+use reqwest::{Client, Method};
 use std::str::FromStr;
 use url::Url;
 
@@ -7,6 +7,8 @@ pub mod token;
 
 static BASE_URL: Lazy<Url> =
     Lazy::new(|| Url::from_str("https://richamster.com/public/v1/").unwrap());
+
+pub static CLIENT: Lazy<Client> = Lazy::new(Client::new);
 
 pub enum Api {
     Exchange(ExchangeApi),
