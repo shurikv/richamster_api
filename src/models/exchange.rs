@@ -114,12 +114,7 @@ pub struct OrderBookFilter {
     pub order_type: Option<OrderType>,
 }
 
-pub struct OrderBookFilterBuilder {
-    pub pair: CurrencyPair,
-    pub order_type: Option<OrderType>,
-}
-
-impl OrderBookFilterBuilder {
+impl OrderBookFilter {
     pub fn new(pair: CurrencyPair) -> Self {
         Self {
             pair,
@@ -130,13 +125,6 @@ impl OrderBookFilterBuilder {
     pub fn order_type(mut self, order_type: OrderType) -> Self {
         self.order_type = Some(order_type);
         self
-    }
-
-    pub fn build(self) -> OrderBookFilter {
-        OrderBookFilter {
-            pair: self.pair,
-            order_type: self.order_type,
-        }
     }
 }
 
