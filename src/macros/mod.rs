@@ -4,7 +4,7 @@ macro_rules! send_request {
     ( $url:expr, $method:expr, $auth_state:expr ) => {{
         $crate::api::CLIENT
             .request($method, $url)
-            .compose(&$auth_state)
+            .compose(&$auth_state, None)
             .send()
             .await?
     }};
@@ -13,7 +13,7 @@ macro_rules! send_request {
             .request($method, $url)
             .body($body.clone())
             .header("Content-Type", "application/json")
-            .compose_with_payload(&$auth_state, $body.as_str())
+            .compose(&$auth_state, Some($body.as_str()))
             .send()
             .await?
     }};

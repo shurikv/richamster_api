@@ -56,39 +56,22 @@ pub enum AuthState {
 }
 
 pub trait HeaderCompose {
-    fn compose(self, auth_state: &AuthState) -> RequestBuilder;
-    fn compose_with_payload(self, auth_state: &AuthState, payload: &str) -> RequestBuilder;
+    fn compose(self, auth_state: &AuthState, payload: Option<&str>) -> RequestBuilder;
 }
 
 impl HeaderCompose for RequestBuilder {
-    fn compose(self, auth_state: &AuthState) -> RequestBuilder {
+    fn compose(self, auth_state: &AuthState, payload: Option<&str>) -> RequestBuilder {
         match auth_state {
             AuthState::Unauthorized => self,
             AuthState::JwtTokenAuth(jwt_token) => {
                 AuthState::insert_jwt_token_header(self, jwt_token)
             }
             AuthState::ApiSecretKeyAuth(api, secret) => {
-                AuthState::insert_keys_headers(self, api, secret, "")
+                AuthState::insert_keys_headers(self, api, secret, payload.unwrap_or(""))
             }
             AuthState::JwtTokenWithApiSecretKeyAuth(jwt_token, api, secret) => {
                 let builder = AuthState::insert_jwt_token_header(self, jwt_token);
-                AuthState::insert_keys_headers(builder, api, secret, "")
-            }
-        }
-    }
-
-    fn compose_with_payload(self, auth_state: &AuthState, payload: &str) -> RequestBuilder {
-        match auth_state {
-            AuthState::Unauthorized => self,
-            AuthState::JwtTokenAuth(jwt_token) => {
-                AuthState::insert_jwt_token_header(self, jwt_token)
-            }
-            AuthState::ApiSecretKeyAuth(api, secret) => {
-                AuthState::insert_keys_headers(self, api, secret, payload)
-            }
-            AuthState::JwtTokenWithApiSecretKeyAuth(jwt_token, api, secret) => {
-                let builder = AuthState::insert_jwt_token_header(self, jwt_token);
-                AuthState::insert_keys_headers(builder, api, secret, payload)
+                AuthState::insert_keys_headers(builder, api, secret, payload.unwrap_or(""))
             }
         }
     }
