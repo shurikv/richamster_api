@@ -6,11 +6,9 @@ use crate::models::user::{
     TransactionsFilter, TransferQuery, UserBalance, UserDetail, UserOrderResponse,
     UserOrdersFilter, UserTransactionResponce,
 };
-use crate::richamster::common;
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::{process_response, send_request};
 use reqwest::StatusCode;
-use secrecy::SecretBox;
 
 #[derive(Default)]
 pub struct User {
@@ -24,15 +22,15 @@ impl User {
 
     pub fn with_jwt_token(token: String) -> Self {
         Self {
-            auth_state: AuthState::JwtTokenAuth(common::JwtToken(SecretBox::new(Box::new(token)))),
+            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
         }
     }
 
     pub fn with_keys(api_key: String, secret_key: String) -> Self {
         Self {
             auth_state: AuthState::ApiSecretKeyAuth(
-                common::ApiKey(SecretBox::new(Box::new(api_key))),
-                common::SecretKey(SecretBox::new(Box::new(secret_key))),
+                ApiKey::new(api_key),
+                SecretKey::new(secret_key),
             ),
         }
     }
@@ -40,9 +38,9 @@ impl User {
     pub fn with_jwt_and_keys(jwt: String, api_key: String, secret_key: String) -> Self {
         Self {
             auth_state: AuthState::JwtTokenWithApiSecretKeyAuth(
-                JwtToken(SecretBox::new(Box::new(jwt))),
-                ApiKey(SecretBox::new(Box::new(api_key))),
-                SecretKey(SecretBox::new(Box::new(secret_key))),
+                JwtToken::new(jwt),
+                ApiKey::new(api_key),
+                SecretKey::new(secret_key),
             ),
         }
     }

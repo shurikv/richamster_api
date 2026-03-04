@@ -5,12 +5,10 @@ use crate::models::withdraw::{
     WithdrawData, WithdrawDetailError, WithdrawError, WithdrawFieldError, WithdrawInfoResponse,
     WithdrawResponse,
 };
-use crate::richamster::common;
-use crate::richamster::common::AuthState;
 use crate::richamster::common::HeaderCompose;
+use crate::richamster::common::{ApiKey, AuthState, JwtToken, SecretKey};
 use crate::send_request;
 use reqwest::StatusCode;
-use secrecy::SecretBox;
 
 #[derive(Default)]
 pub struct Withdraw {
@@ -24,15 +22,15 @@ impl Withdraw {
 
     pub fn with_jwt_token(token: String) -> Self {
         Self {
-            auth_state: AuthState::JwtTokenAuth(common::JwtToken(SecretBox::new(Box::new(token)))),
+            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
         }
     }
 
     pub fn with_keys(api_key: String, secret_key: String) -> Self {
         Self {
             auth_state: AuthState::ApiSecretKeyAuth(
-                common::ApiKey(SecretBox::new(Box::new(api_key))),
-                common::SecretKey(SecretBox::new(Box::new(secret_key))),
+                ApiKey::new(api_key),
+                SecretKey::new(secret_key),
             ),
         }
     }

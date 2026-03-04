@@ -3,11 +3,9 @@ use crate::api::{Api, ReplenishApi, RequestData, RequestPath};
 use crate::errors::RichamsterError;
 use crate::models::common::CurrencyChannel;
 use crate::models::replenish::{P2PReplenish, ReplenishInfo};
-use crate::richamster::common;
-use crate::richamster::common::{AuthState, HeaderCompose};
+use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::send_request;
 use reqwest::StatusCode;
-use secrecy::SecretBox;
 
 pub struct Replenish {
     auth_state: AuthState,
@@ -16,15 +14,15 @@ pub struct Replenish {
 impl Replenish {
     pub fn with_jwt_token(token: String) -> Self {
         Self {
-            auth_state: AuthState::JwtTokenAuth(common::JwtToken(SecretBox::new(Box::new(token)))),
+            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
         }
     }
 
     pub fn with_keys(api_key: String, secret_key: String) -> Self {
         Self {
             auth_state: AuthState::ApiSecretKeyAuth(
-                common::ApiKey(SecretBox::new(Box::new(api_key))),
-                common::SecretKey(SecretBox::new(Box::new(secret_key))),
+                ApiKey::new(api_key),
+                SecretKey::new(secret_key),
             ),
         }
     }

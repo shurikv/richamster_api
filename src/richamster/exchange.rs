@@ -13,7 +13,6 @@ use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, Secr
 use crate::{process_response, send_request};
 use percent_encoding::percent_decode_str;
 use reqwest::StatusCode;
-use secrecy::SecretBox;
 use url::Url;
 
 #[derive(Default)]
@@ -28,15 +27,15 @@ impl Exchange {
 
     pub fn with_jwt_token(token: String) -> Self {
         Self {
-            auth_state: AuthState::JwtTokenAuth(JwtToken(SecretBox::new(Box::new(token)))),
+            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
         }
     }
 
     pub fn with_keys(api_key: String, secret_key: String) -> Self {
         Self {
             auth_state: AuthState::ApiSecretKeyAuth(
-                ApiKey(SecretBox::new(Box::new(api_key))),
-                SecretKey(SecretBox::new(Box::new(secret_key))),
+                ApiKey::new(api_key),
+                SecretKey::new(secret_key),
             ),
         }
     }

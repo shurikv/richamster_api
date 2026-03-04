@@ -180,116 +180,44 @@ impl UserOrdersFilter {
         self
     }
 
-    pub fn order_type(self, order_type: OrderType) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: Some(order_type),
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: self.page,
-            page_size: self.page_size,
-        }
+    pub fn order_type(mut self, order_type: OrderType) -> Self {
+        self.order_type = Some(order_type);
+        self
     }
 
-    pub fn closed_at_gte(self, closed_at_gte: i64) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: Some(closed_at_gte),
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: self.page,
-            page_size: self.page_size,
-        }
+    pub fn closed_at_gte(mut self, closed_at_gte: i64) -> Self {
+        self.closed_at_gte = Some(closed_at_gte);
+        self
     }
 
-    pub fn closed_at_lte(self, closed_at_lte: i64) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: Some(closed_at_lte),
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: self.page,
-            page_size: self.page_size,
-        }
+    pub fn closed_at_lte(mut self, closed_at_lte: i64) -> Self {
+        self.closed_at_lte = Some(closed_at_lte);
+        self
     }
 
-    pub fn closed_at_time_gte(self, closed_at_time_gte: i64) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_gte: Some(closed_at_time_gte),
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: self.page,
-            page_size: self.page_size,
-        }
+    pub fn closed_at_time_gte(mut self, closed_at_time_gte: i64) -> Self {
+        self.closed_at_time_gte = Some(closed_at_time_gte);
+        self
     }
 
-    pub fn closed_at_time_lte(self, closed_at_time_lte: i64) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_lte: Some(closed_at_time_lte),
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: self.page,
-            page_size: self.page_size,
-        }
+    pub fn closed_at_time_lte(mut self, closed_at_time_lte: i64) -> Self {
+        self.closed_at_time_lte = Some(closed_at_time_lte);
+        self
     }
 
-    pub fn closed_at_time_gt(self, closed_at_time_gt: i64) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gt: Some(closed_at_time_gt),
-            page: self.page,
-            page_size: self.page_size,
-        }
+    pub fn closed_at_time_gt(mut self, closed_at_time_gt: i64) -> Self {
+        self.closed_at_time_gt = Some(closed_at_time_gt);
+        self
     }
 
-    pub fn page(self, page: i32) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: Some(page),
-            page_size: self.page_size,
-        }
+    pub fn page(mut self, page: i32) -> Self {
+        self.page = Some(page);
+        self
     }
 
-    pub fn page_size(self, page_size: i32) -> Self {
-        Self {
-            pair: self.pair,
-            order_type: self.order_type,
-            closed_at_gte: self.closed_at_gte,
-            closed_at_lte: self.closed_at_lte,
-            closed_at_time_gte: self.closed_at_time_gte,
-            closed_at_time_lte: self.closed_at_time_lte,
-            closed_at_time_gt: self.closed_at_time_gt,
-            page: self.page,
-            page_size: Some(page_size),
-        }
+    pub fn page_size(mut self, page_size: i32) -> Self {
+        self.page_size = Some(page_size);
+        self
     }
 
     pub fn compose_url(&self, url: &mut Url) -> String {

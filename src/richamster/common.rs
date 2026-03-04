@@ -11,6 +11,10 @@ const JWT: &str = "JWT";
 pub struct JwtToken(pub SecretBox<String>);
 
 impl JwtToken {
+    pub fn new(token: String) -> JwtToken {
+        Self(SecretBox::new(Box::new(token)))
+    }
+
     fn value(&self) -> &str {
         self.0.expose_secret()
     }
@@ -20,6 +24,10 @@ impl JwtToken {
 pub struct ApiKey(pub SecretBox<String>);
 
 impl ApiKey {
+    pub fn new(api_key: String) -> ApiKey {
+        Self(SecretBox::new(Box::new(api_key)))
+    }
+
     fn value(&self) -> &str {
         self.0.expose_secret()
     }
@@ -29,6 +37,10 @@ impl ApiKey {
 pub struct SecretKey(pub SecretBox<String>);
 
 impl SecretKey {
+    pub fn new(secret_key: String) -> SecretKey {
+        Self(SecretBox::new(Box::new(secret_key)))
+    }
+
     fn value(&self) -> &str {
         self.0.expose_secret()
     }
