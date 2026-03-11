@@ -295,9 +295,6 @@ mod test {
     #[test]
     fn create_default_exchange() {
         let exchange: Exchange = Default::default();
-        match exchange.auth_state {
-            AuthState::Unauthorized => assert!(true),
-            _ => assert!(false),
-        }
+        assert!(matches!(exchange.auth_state, AuthState::Unauthorized))
     }
 }

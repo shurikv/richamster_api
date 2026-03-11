@@ -56,12 +56,6 @@ pub enum Token {
     WLD,
 }
 
-#[derive(Error, Debug)]
-pub enum TokenError {
-    #[error("Invalid token: {0}")]
-    InvalidToken(String),
-}
-
 #[derive(Debug, PartialEq, Hash, Eq, Clone, Copy)]
 pub struct CurrencyPair(pub [Token; 2]);
 
@@ -79,9 +73,11 @@ impl CurrencyPair {
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum CurrencyPairError {
+    #[error("Invalid token: {0}")]
     InvalidToken(String),
+    #[error("Illegal delimiter count: {0}")]
     IllegalDelimiterCount(usize),
 }
 

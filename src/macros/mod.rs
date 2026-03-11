@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! send_request {
-    ( $url:expr, $method:expr ) => {{ $crate::api::CCLIENT.request($method, $url).send().await? }};
+    ( $url:expr, $method:expr ) => {{ $crate::api::CLIENT.request($method, $url).send().await? }};
     ( $url:expr, $method:expr, $auth_state:expr ) => {{
         $crate::api::CLIENT
             .request($method, $url)
@@ -16,17 +16,6 @@ macro_rules! send_request {
             .compose(&$auth_state, Some($body.as_str()))
             .send()
             .await?
-    }};
-}
-
-#[macro_export]
-macro_rules! prepare_request {
-    ( $url:expr, $request_type:ident) => {{ $crate::api::CCLIENT.$request_type($url) }};
-    ( $url:expr, $payload:expr, $request_type:ident) => {{
-        $crate::api::CCLIENT
-            .$request_type($url)
-            .body($payload.clone())
-            .header("Content-Type", "application/json")
     }};
 }
 
