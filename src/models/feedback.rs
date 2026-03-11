@@ -42,6 +42,21 @@ pub struct ContactUsError {
 
 impl Display for ContactUsError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "Contact us error")?;
+
+        for (field, errors) in [
+            ("name", self.name.as_ref()),
+            ("email", self.email.as_ref()),
+            ("phone", self.phone.as_ref()),
+            ("question", self.question.as_ref()),
+            ("non_field_errors", self.non_field_errors.as_ref()),
+        ] {
+            if let Some(errors) = errors {
+                for error in errors {
+                    write!(f, "\n{}: {}", field, error)?;
+                }
+            }
+        }
+        Ok(())
     }
 }

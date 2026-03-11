@@ -207,7 +207,6 @@ impl Exchange {
         match resp.status() {
             StatusCode::CREATED | StatusCode::OK => {
                 let response_string = resp.text().await?;
-                println!("response: {:?}", response_string);
                 let response: MarketOrderCalculator = serde_json::from_str(&response_string)?;
                 Ok(response)
             }
@@ -253,21 +252,15 @@ impl Exchange {
             order_type,
             total,
         };
-        println!(
-            "Serialize order: {:?}",
-            serde_json::to_string(&market_order)
-        );
         let resp = send_request!(
             url,
             method,
             self.auth_state,
             serde_json::to_string(&market_order)?
         );
-        println!("status: {:?}", resp.status());
         match resp.status() {
             StatusCode::CREATED | StatusCode::OK => {
                 let response_string = resp.text().await?;
-                println!("response: {:?}", response_string);
                 let response: MarketOrderResponse = serde_json::from_str(&response_string)?;
                 Ok(response)
             }

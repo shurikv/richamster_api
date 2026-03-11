@@ -13,11 +13,11 @@ pub struct CurrencyInfoResponse {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct CurrencyInfo {
-    id: i32,
-    abbreviation: String,
-    title: String,
-    icon: Url,
-    precision: i32,
+    pub id: i32,
+    pub abbreviation: String,
+    pub title: String,
+    pub icon: Url,
+    pub precision: i32,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -52,12 +52,12 @@ pub struct CurrencyPairRestriction {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct FavouritePairResponse {
-    data: String,
+    pub data: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct FavouriteErrorResponse {
-    detail: String,
+    pub detail: String,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -68,14 +68,14 @@ pub struct TickerResponse {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct Ticker {
-    pk: i32,
-    pair: String,
-    last_price: String,
-    first_price: String,
-    high_price: Option<String>,
-    low_price: Option<String>,
-    base_volume: Option<String>,
-    quote_volume: Option<String>,
+    pub pk: i32,
+    pub pair: String,
+    pub last_price: String,
+    pub first_price: String,
+    pub high_price: Option<String>,
+    pub low_price: Option<String>,
+    pub base_volume: Option<String>,
+    pub quote_volume: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
@@ -250,15 +250,15 @@ impl NewOrder {
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct NewOrderError {
     #[serde(rename = "type")]
-    order_type: String,
-    errors: Vec<OrderError>,
+    pub order_type: String,
+    pub errors: Vec<OrderError>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OrderError {
-    code: String,
-    detail: String,
-    attr: String,
+    pub code: String,
+    pub detail: String,
+    pub attr: String,
 }
 
 impl Display for NewOrderError {

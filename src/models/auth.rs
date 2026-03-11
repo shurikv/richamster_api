@@ -41,7 +41,15 @@ pub struct Error {
 
 impl Display for LoginResponseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "Login error [{}]", self.type_field)?;
+        for error in &self.errors {
+            write!(
+                f,
+                "\n[code: {}, detail: {}, attr: {}]",
+                error.code, error.detail, error.attr
+            )?;
+        }
+        Ok(())
     }
 }
 
@@ -76,7 +84,20 @@ pub struct RegisterUserError {
 
 impl Display for RegisterUserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "Register user error")?;
+        for (field, errors) in [
+            ("username", self.username.as_ref()),
+            ("email", self.email.as_ref()),
+            ("referrer", self.referrer.as_ref()),
+            ("non_field_errors", self.non_field_errors.as_ref()),
+        ] {
+            if let Some(errors) = errors {
+                for error in errors {
+                    write!(f, "\n{}: {}", field, error)?;
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -107,7 +128,15 @@ pub struct CommonError {
 
 impl Display for OtpLoginResponseError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "Otp login error [{}]", self.error_type)?;
+        for error in &self.errors {
+            write!(
+                f,
+                "\n[code: {}, detail: {}, attr: {}]",
+                error.code, error.detail, error.attr
+            )?;
+        }
+        Ok(())
     }
 }
 
@@ -135,6 +164,6 @@ pub struct NonFieldsError {
 
 impl Display for NonFieldsError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{}", self.non_field_errors.join(", "))
     }
 }

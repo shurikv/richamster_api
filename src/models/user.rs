@@ -78,7 +78,7 @@ impl Display for UserDetail {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
-pub struct UserTransactionResponce {
+pub struct UserTransactionResponse {
     pub count: i32,
     pub next: Option<String>,
     pub prev: Option<String>,

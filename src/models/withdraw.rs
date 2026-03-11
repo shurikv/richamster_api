@@ -34,7 +34,35 @@ pub struct WithdrawFieldError {
 
 impl Display for WithdrawError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            WithdrawError::Fields(withdraw_field_error) => {
+                write!(f, "Withdraw field error")?;
+                for (field, errors) in [
+                    ("address", withdraw_field_error.address.as_ref()),
+                    ("sum", withdraw_field_error.sum.as_ref()),
+                    ("fee", withdraw_field_error.fee.as_ref()),
+                    ("pin_code", withdraw_field_error.pin_code.as_ref()),
+                    (
+                        "minimum_confirmations",
+                        withdraw_field_error.minimum_confirmations.as_ref(),
+                    ),
+                    (
+                        "non_field_errors",
+                        withdraw_field_error.non_field_errors.as_ref(),
+                    ),
+                ] {
+                    if let Some(errors) = errors {
+                        for error in errors {
+                            write!(f, "\n{}: {}", field, error)?;
+                        }
+                    }
+                }
+                Ok(())
+            }
+            WithdrawError::Detail(withdraw_detail_error) => {
+                write!(f, "Withdraw error [{}]", withdraw_detail_error.detail)
+            }
+        }
     }
 }
 

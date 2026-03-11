@@ -4,7 +4,7 @@ use crate::api::{RequestData, token};
 use crate::errors::RichamsterError;
 use crate::models::user::{
     TransactionsFilter, TransferQuery, UserBalance, UserDetail, UserOrderResponse,
-    UserOrdersFilter, UserTransactionResponce,
+    UserOrdersFilter, UserTransactionResponse,
 };
 use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
 use crate::{process_response, send_request};
@@ -69,11 +69,11 @@ impl User {
     pub async fn transactions_list(
         &self,
         parameters: TransactionsFilter,
-    ) -> Result<UserTransactionResponce, RichamsterError> {
+    ) -> Result<UserTransactionResponse, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Transactions).request_data();
         let url = parameters.compose_url(&mut url);
         let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, UserTransactionResponce)
+        process_response!(resp, UserTransactionResponse)
     }
 
     pub async fn orders(
