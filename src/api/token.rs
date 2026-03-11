@@ -85,23 +85,23 @@ impl FromStr for CurrencyPair {
     type Err = CurrencyPairError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let split: Vec<Token> = s
+        let tokens: Vec<Token> = s
             .split('/')
             .map(|v| {
                 v.parse::<Token>()
                     .map_err(|_| CurrencyPairError::InvalidToken(v.to_owned()))
             })
             .collect::<Result<_, CurrencyPairError>>()?;
-        if split.len() != 2 {
-            return Err(CurrencyPairError::IllegalDelimiterCount(split.len()));
+        match <[Token; 2]>::try_from(tokens) {
+            Ok(pair) => Ok(Self(pair)),
+            Err(v) => Err(CurrencyPairError::IllegalDelimiterCount(v.len())),
         }
-        Ok(Self(split.try_into().unwrap()))
     }
 }
 
 impl From<CurrencyPair> for String {
     fn from(value: CurrencyPair) -> Self {
-        format!("{}/{}", value.0[0].as_ref(), value.0[1].as_ref())
+        value.to_string()
     }
 }
 
