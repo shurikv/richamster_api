@@ -130,13 +130,12 @@ impl OrderBookFilter {
 
 impl OrderBookFilter {
     pub fn compose_url(&self, url: &mut Url) -> String {
-        url.query_pairs_mut()
-            .append_pair("pair", self.pair.to_string().as_str());
+        let mut url_mut = url.query_pairs_mut();
+        url_mut.append_pair("pair", self.pair.to_string().as_str());
         if let Some(order_type) = &self.order_type {
-            url.query_pairs_mut()
-                .append_pair("side", order_type.to_string().to_lowercase().as_str());
+            url_mut.append_pair("side", order_type.to_string().to_lowercase().as_str());
         }
-        url.to_string()
+        url_mut.finish().to_string()
     }
 }
 
@@ -155,7 +154,7 @@ pub struct OrdersHistory {
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
 pub struct OrderHistoryRecord {
-    pk: i32,
+    pub pk: i32,
     #[serde(deserialize_with = "crate::models::deserialize::string_timestamp_deserialize")]
     pub created_at: DateTime<Local>,
     #[serde(deserialize_with = "crate::models::deserialize::option_timestamp_deserialize")]
@@ -187,18 +186,17 @@ impl OrdersFilter {
     }
 
     pub fn compose_url(&self, url: &mut Url) -> String {
+        let mut url = url.query_pairs_mut();
         if let Some(pair) = &self.pair {
-            url.query_pairs_mut()
-                .append_pair("pair", pair.to_string().as_str());
+            url.append_pair("pair", pair.to_string().as_str());
         }
         if let Some(ordering) = &self.ordering {
-            url.query_pairs_mut().append_pair("ordering", ordering);
+            url.append_pair("ordering", ordering);
         }
         if let Some(page_size) = &self.page_size {
-            url.query_pairs_mut()
-                .append_pair("page_size", page_size.to_string().as_str());
+            url.append_pair("page_size", page_size.to_string().as_str());
         }
-        url.to_string()
+        url.finish().to_string()
     }
 }
 
@@ -263,7 +261,15 @@ pub struct OrderError {
 
 impl Display for NewOrderError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "New order error [{}]", self.order_type)?;
+        for error in &self.errors {
+            write!(
+                f,
+                "\n[code: {}, detail: {}, attr: {}]",
+                error.code, error.detail, error.attr
+            )?;
+        }
+        Ok(())
     }
 }
 
@@ -300,10 +306,8 @@ pub struct MarketOrderCalculator {
 impl MarketOrderInfo {
     pub fn compose_url(&self, url: &mut Url) -> String {
         url.query_pairs_mut()
-            .append_pair("currency_pair", self.currency_pair.to_string().as_str());
-        url.query_pairs_mut()
-            .append_pair("type", self.order_type.to_string().as_str());
-        url.query_pairs_mut()
+            .append_pair("currency_pair", self.currency_pair.to_string().as_str())
+            .append_pair("type", self.order_type.to_string().as_str())
             .append_pair("amount", self.amount.as_str());
         url.to_string()
     }

@@ -136,24 +136,21 @@ pub struct TransactionsFilter {
 
 impl TransactionsFilter {
     pub fn compose_url(&self, url: &mut Url) -> String {
+        let mut url = url.query_pairs_mut();
         if let Some(token) = &self.currency {
-            url.query_pairs_mut()
-                .append_pair("currency", token.as_ref());
+            url.append_pair("currency", token.as_ref());
         }
         if let Some(transaction_type) = &self.transaction_type {
             let tr_type: i32 = (*transaction_type).into();
-            url.query_pairs_mut()
-                .append_pair("type", tr_type.to_string().as_str());
+            url.append_pair("type", tr_type.to_string().as_str());
         }
         if let Some(closed_at_gte) = &self.closed_at_gte {
-            url.query_pairs_mut()
-                .append_pair("closed_at__gte", closed_at_gte.to_string().as_str());
+            url.append_pair("closed_at__gte", closed_at_gte.to_string().as_str());
         }
         if let Some(closed_at_lte) = &self.closed_at_lte {
-            url.query_pairs_mut()
-                .append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
+            url.append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
         }
-        url.to_string()
+        url.finish().to_string()
     }
 }
 
@@ -221,47 +218,41 @@ impl UserOrdersFilter {
     }
 
     pub fn compose_url(&self, url: &mut Url) -> String {
+        let mut url = url.query_pairs_mut();
         if let Some(pair) = &self.pair {
-            url.query_pairs_mut()
-                .append_pair("pair", pair.to_string().as_str());
+            url.append_pair("pair", pair.to_string().as_str());
         }
         if let Some(order_type) = &self.order_type {
-            url.query_pairs_mut()
-                .append_pair("side", order_type.to_string().as_str());
+            url.append_pair("side", order_type.to_string().as_str());
         }
         if let Some(closed_at_gte) = &self.closed_at_gte {
-            url.query_pairs_mut()
-                .append_pair("closed_at__gte", closed_at_gte.to_string().as_str());
+            url.append_pair("closed_at__gte", closed_at_gte.to_string().as_str());
         }
         if let Some(closed_at_lte) = &self.closed_at_lte {
-            url.query_pairs_mut()
-                .append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
+            url.append_pair("closed_at__lte", closed_at_lte.to_string().as_str());
         }
         if let Some(closed_at_time_gte) = &self.closed_at_time_gte {
-            url.query_pairs_mut().append_pair(
+            url.append_pair(
                 "closed_at_time_gte",
                 closed_at_time_gte.to_string().as_str(),
             );
         }
         if let Some(closed_at_time_lte) = &self.closed_at_time_lte {
-            url.query_pairs_mut().append_pair(
+            url.append_pair(
                 "closed_at_time_lte",
                 closed_at_time_lte.to_string().as_str(),
             );
         }
         if let Some(closed_at_time_gt) = &self.closed_at_time_gt {
-            url.query_pairs_mut()
-                .append_pair("closed_at_time_gt", closed_at_time_gt.to_string().as_str());
+            url.append_pair("closed_at_time_gt", closed_at_time_gt.to_string().as_str());
         }
         if let Some(page) = &self.page {
-            url.query_pairs_mut()
-                .append_pair("page", page.to_string().as_str());
+            url.append_pair("page", page.to_string().as_str());
         }
         if let Some(page_size) = &self.page_size {
-            url.query_pairs_mut()
-                .append_pair("page_size", page_size.to_string().as_str());
+            url.append_pair("page_size", page_size.to_string().as_str());
         }
-        url.to_string()
+        url.finish().to_string()
     }
 }
 

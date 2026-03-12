@@ -59,19 +59,22 @@ impl Exchange {
         Ok(send_request!(url, method, self.auth_state).json().await?)
     }
 
+    async fn find_market(&self, pair: &CurrencyPair) -> Result<Market, RichamsterError> {
+        let market_list = self.markets_list().await?;
+        if let Some(market) = market_list
+            .iter()
+            .find(|m| m.abbreviation == pair.to_string())
+        {
+            return Ok(market.clone());
+        }
+        Err(RichamsterError::IllegalCurrencyPair(pair.clone()))
+    }
+
     pub async fn favourites_pair_toggle(
         &self,
         pair: CurrencyPair,
     ) -> Result<FavouritePairResponse, RichamsterError> {
-        let market_list = self.markets_list().await?;
-        let market = if let Some(m) = market_list
-            .iter()
-            .find(|m| m.abbreviation == pair.to_string())
-        {
-            m
-        } else {
-            return Err(RichamsterError::IllegalCurrencyPair(pair));
-        };
+        let market = self.find_market(&pair).await?;
         let RequestData(url, method) = Api::Exchange(ExchangeApi::Favourites).request_data();
         let url = percent_decode_str(url.to_string().as_str())
             .decode_utf8_lossy()
@@ -184,16 +187,7 @@ impl Exchange {
         amount: f64,
         order_type: OrderType,
     ) -> Result<MarketOrderCalculator, RichamsterError> {
-        let market_list = self.markets_list().await?;
-        let market = if let Some(m) = market_list
-            .iter()
-            .find(|m| m.abbreviation == pair.to_string())
-        {
-            m
-        } else {
-            return Err(RichamsterError::IllegalCurrencyPair(pair));
-        };
-
+        let market = self.find_market(&pair).await?;
         let RequestData(mut url, method) =
             Api::Exchange(ExchangeApi::CalculateMarketOrder).request_data();
         let market_order = MarketOrderInfo {
@@ -233,16 +227,7 @@ impl Exchange {
         order_type: OrderType,
         total: Option<f64>,
     ) -> Result<MarketOrderResponse, RichamsterError> {
-        let market_list = self.markets_list().await?;
-        let market = if let Some(m) = market_list
-            .iter()
-            .find(|m| m.abbreviation == pair.to_string())
-        {
-            m
-        } else {
-            return Err(RichamsterError::IllegalCurrencyPair(pair));
-        };
-
+        let market = self.find_market(&pair).await?;
         let total = total.map(|t| t.to_string());
         let RequestData(url, method) =
             Api::Exchange(ExchangeApi::ExecuteMarketOrder).request_data();
