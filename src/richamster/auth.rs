@@ -1,4 +1,4 @@
-use crate::api::{Api, AuthenticationApi, CLIENT, RequestData, RequestPath};
+use crate::api::{Api, AuthenticationApi, RequestData, RequestPath};
 use crate::errors::RichamsterError;
 use crate::models::auth::LoginResponse::{Jwt, RequiresTwoFactor};
 use crate::models::auth::{
@@ -6,27 +6,19 @@ use crate::models::auth::{
     OtpLoginResponseError, RefreshToken, RegisterUser, RegisterUserError, RegisterUserResponse,
     TokenData,
 };
-use reqwest::{IntoUrl, Method, Response, StatusCode};
-use serde::Serialize;
+use crate::richamster::common::send_request_with_body;
+use reqwest::StatusCode;
 
 pub struct Auth;
 
 impl Auth {
-    async fn send_request(
-        url: impl IntoUrl,
-        method: Method,
-        body: impl Serialize,
-    ) -> Result<Response, reqwest::Error> {
-        CLIENT.request(method, url).json(&body).send().await
-    }
-
     pub async fn login(
         email: impl AsRef<str>,
         password: impl AsRef<str>,
     ) -> Result<LoginResponse, RichamsterError> {
         let login = Login::new(email.as_ref(), password.as_ref());
         let RequestData(url, method) = Api::Authentication(AuthenticationApi::Login).request_data();
-        let resp = Self::send_request(url, method, login).await?;
+        let resp = send_request_with_body(url, method, serde_json::to_string(&login)?).await?;
         match resp.status() {
             StatusCode::OK => Ok(RequiresTwoFactor(true)),
             StatusCode::CREATED => {
@@ -56,7 +48,8 @@ impl Auth {
     ) -> Result<RegisterUserResponse, RichamsterError> {
         let RequestData(url, method) =
             Api::Authentication(AuthenticationApi::Register).request_data();
-        let resp = Self::send_request(url, method, register_user).await?;
+        let resp =
+            send_request_with_body(url, method, serde_json::to_string(&register_user)?).await?;
 
         match resp.status() {
             StatusCode::CREATED => {
@@ -73,7 +66,9 @@ impl Auth {
     pub async fn two_factor_login(otp_token: String) -> Result<OtpLoginResponse, RichamsterError> {
         let RequestData(url, method) =
             Api::Authentication(AuthenticationApi::TwoFactorLogin).request_data();
-        let resp = Self::send_request(url, method, OtpLogin { otp_token }).await?;
+        let resp =
+            send_request_with_body(url, method, serde_json::to_string(&OtpLogin { otp_token })?)
+                .await?;
         if resp.status() == StatusCode::CREATED {
             let token: TokenData = serde_json::from_str(&resp.text().await?)?;
             Ok(OtpLoginResponse::Jwt(token.access))
@@ -86,7 +81,12 @@ impl Auth {
     pub async fn refresh_token(jwt_token: String) -> Result<TokenData, RichamsterError> {
         let RequestData(url, method) =
             Api::Authentication(AuthenticationApi::RefreshToken).request_data();
-        let resp = Self::send_request(url, method, RefreshToken { refresh: jwt_token }).await?;
+        let resp = send_request_with_body(
+            url,
+            method,
+            serde_json::to_string(&RefreshToken { refresh: jwt_token })?,
+        )
+        .await?;
         match resp.status() {
             StatusCode::OK => {
                 let response: TokenData = serde_json::from_str(&resp.text().await?)?;

@@ -3,8 +3,9 @@ use crate::api::{Api, ReplenishApi, RequestData, RequestPath};
 use crate::errors::RichamsterError;
 use crate::models::common::CurrencyChannel;
 use crate::models::replenish::{P2PReplenish, ReplenishInfo};
-use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
-use crate::send_request;
+use crate::richamster::common::{
+    ApiKey, AuthState, JwtToken, SecretKey, send_request_with_auth, send_request_with_body_and_auth,
+};
 use reqwest::StatusCode;
 
 pub struct Replenish {
@@ -37,7 +38,7 @@ impl Replenish {
         let RequestData(url, method) = Api::Replenish(ReplenishApi::ReplenishInfo).request_data();
         let path = format!("{}/{}/", currency_name.as_ref(), currency_channel);
         let url = url.join(&path)?;
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         match resp.status() {
             StatusCode::OK => {
                 let string = resp.text().await?;
@@ -63,7 +64,7 @@ impl Replenish {
         let RequestData(mut url, method) =
             Api::Replenish(ReplenishApi::ReplenishChannelsInfo).request_data();
         url = url.join(currency_name.as_ref())?;
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         match resp.status() {
             StatusCode::OK => {
                 let string = resp.text().await?;
@@ -83,12 +84,13 @@ impl Replenish {
         replenish: P2PReplenish,
     ) -> Result<P2PReplenish, RichamsterError> {
         let RequestData(url, method) = Api::Replenish(ReplenishApi::P2PReplenish).request_data();
-        let resp = send_request!(
+        let resp = send_request_with_body_and_auth(
             url,
             method,
-            self.auth_state,
-            serde_json::to_string(&replenish)?
-        );
+            serde_json::to_string(&replenish)?,
+            &self.auth_state,
+        )
+        .await?;
         match resp.status() {
             StatusCode::CREATED => {
                 let string = resp.text().await?;

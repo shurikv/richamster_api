@@ -6,9 +6,10 @@ use crate::models::user::{
     TransactionsFilter, TransferQuery, UserBalance, UserDetail, UserOrderResponse,
     UserOrdersFilter, UserTransactionResponse,
 };
-use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
-use crate::{process_response, send_request};
-use reqwest::StatusCode;
+use crate::richamster::common::{
+    ApiKey, AuthState, JwtToken, SecretKey, process_response, send_request_with_auth,
+    send_request_with_body_and_auth,
+};
 
 #[derive(Default)]
 pub struct User {
@@ -56,14 +57,14 @@ impl User {
             url.query_pairs_mut()
                 .append_pair("currency", token.as_ref());
         }
-        let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, Vec<UserBalance>)
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
+        process_response(resp).await
     }
 
     pub async fn detail_info(&self) -> Result<UserDetail, RichamsterError> {
         let RequestData(url, method) = Api::User(Detail).request_data();
-        let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, UserDetail)
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
+        process_response(resp).await
     }
 
     pub async fn transactions_list(
@@ -72,8 +73,8 @@ impl User {
     ) -> Result<UserTransactionResponse, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Transactions).request_data();
         let url = parameters.compose_url(&mut url);
-        let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, UserTransactionResponse)
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
+        process_response(resp).await
     }
 
     pub async fn orders(
@@ -82,7 +83,7 @@ impl User {
     ) -> Result<UserOrderResponse, RichamsterError> {
         let RequestData(mut url, method) = Api::User(Orders).request_data();
         let url = parameters.compose_url(&mut url);
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         let string = resp.text().await?;
         Ok(serde_json::from_str(&string)?)
     }
@@ -90,7 +91,7 @@ impl User {
     pub async fn transfer(&self, transfer_query: TransferQuery) -> Result<(), RichamsterError> {
         let RequestData(url, method) = Api::User(Transfer).request_data();
         let payload = serde_json::to_string(&transfer_query)?;
-        send_request!(url, method, self.auth_state, payload);
+        send_request_with_body_and_auth(url, method, payload, &self.auth_state).await?;
         Ok(())
     }
 }
@@ -102,9 +103,6 @@ mod test {
     #[test]
     fn create_default_user() {
         let user: User = Default::default();
-        match user.auth_state {
-            AuthState::Unauthorized => assert!(true),
-            _ => assert!(false),
-        }
+        assert!(matches!(user.auth_state, AuthState::Unauthorized));
     }
 }

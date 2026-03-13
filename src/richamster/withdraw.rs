@@ -5,9 +5,9 @@ use crate::models::withdraw::{
     WithdrawData, WithdrawDetailError, WithdrawError, WithdrawFieldError, WithdrawInfoResponse,
     WithdrawResponse,
 };
-use crate::richamster::common::HeaderCompose;
-use crate::richamster::common::{ApiKey, AuthState, JwtToken, SecretKey};
-use crate::send_request;
+use crate::richamster::common::{
+    ApiKey, AuthState, JwtToken, SecretKey, send_request_with_auth, send_request_with_body_and_auth,
+};
 use reqwest::StatusCode;
 
 #[derive(Default)]
@@ -44,7 +44,7 @@ impl Withdraw {
         let RequestData(mut url, method) = Api::Withdraw(WithdrawApi::WithdrawInfo).request_data();
         url = url.join(token.as_ref())?;
 
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         match resp.status() {
             StatusCode::OK => {
                 let string = resp.text().await?;
@@ -66,12 +66,13 @@ impl Withdraw {
         let RequestData(mut url, method) = Api::Withdraw(WithdrawApi::Withdraw).request_data();
         url = url.join(token.as_ref())?;
 
-        let resp = send_request!(
+        let resp = send_request_with_body_and_auth(
             url,
             method,
-            self.auth_state,
-            serde_json::to_string(&withdraw)?
-        );
+            serde_json::to_string(&withdraw)?,
+            &self.auth_state,
+        )
+        .await?;
         match resp.status() {
             StatusCode::OK => {
                 let string = resp.text().await?;

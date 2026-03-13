@@ -9,8 +9,10 @@ use crate::models::exchange::{
     MarketOrderCalculator, MarketOrderInfo, MarketOrderResponse, NewOrder, NewOrderError,
     OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, TickerResponse,
 };
-use crate::richamster::common::{ApiKey, AuthState, HeaderCompose, JwtToken, SecretKey};
-use crate::{process_response, send_request};
+use crate::richamster::common::{
+    ApiKey, AuthState, JwtToken, SecretKey, process_response, send_request_with_auth,
+    send_request_with_body_and_auth,
+};
 use percent_encoding::percent_decode_str;
 use reqwest::StatusCode;
 use url::Url;
@@ -44,7 +46,10 @@ impl Exchange {
 impl Exchange {
     pub async fn restrictions_list(&self) -> Result<Vec<CurrencyPairRestriction>, RichamsterError> {
         let RequestData(url, method) = Api::Exchange(ExchangeApi::Restrictions).request_data();
-        Ok(send_request!(url, method, self.auth_state).json().await?)
+        Ok(send_request_with_auth(url, method, &self.auth_state)
+            .await?
+            .json()
+            .await?)
     }
 
     pub async fn ticker_list(
@@ -56,7 +61,10 @@ impl Exchange {
             url.query_pairs_mut()
                 .append_pair("pair", pair.to_string().as_str());
         }
-        Ok(send_request!(url, method, self.auth_state).json().await?)
+        Ok(send_request_with_auth(url, method, &self.auth_state)
+            .await?
+            .json()
+            .await?)
     }
 
     async fn find_market(&self, pair: &CurrencyPair) -> Result<Market, RichamsterError> {
@@ -67,7 +75,7 @@ impl Exchange {
         {
             return Ok(market.clone());
         }
-        Err(RichamsterError::IllegalCurrencyPair(pair.clone()))
+        Err(RichamsterError::IllegalCurrencyPair(*pair))
     }
 
     pub async fn favourites_pair_toggle(
@@ -80,8 +88,8 @@ impl Exchange {
             .decode_utf8_lossy()
             .replace("{id}", market.id.to_string().as_str());
 
-        let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, FavouritePairResponse)
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
+        process_response(resp).await
     }
 
     pub async fn currencies_list(
@@ -93,20 +101,23 @@ impl Exchange {
             url.query_pairs_mut()
                 .append_pair("abbreviation", t.as_ref());
         }
-        let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, CurrencyInfoResponse)
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
+        process_response(resp).await
     }
 
     pub async fn markets_list(&self) -> Result<Vec<Market>, RichamsterError> {
         let RequestData(url, method) = Api::Exchange(ExchangeApi::Markets).request_data();
-        let resp = send_request!(url, method, self.auth_state);
-        process_response!(resp, Vec<Market>)
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
+        process_response(resp).await
     }
 
     pub async fn order_book(&self, filter: OrderBookFilter) -> Result<OrdersBook, RichamsterError> {
         let RequestData(mut url, method) = Api::Exchange(ExchangeApi::OrderBook).request_data();
         let url = filter.compose_url(&mut url);
-        Ok(send_request!(url, method, self.auth_state).json().await?)
+        Ok(send_request_with_auth(url, method, &self.auth_state)
+            .await?
+            .json()
+            .await?)
     }
 
     pub async fn orders_history(
@@ -115,23 +126,21 @@ impl Exchange {
     ) -> Result<OrdersHistory, RichamsterError> {
         let RequestData(mut url, method) = Api::Exchange(ExchangeApi::OrdersHistory).request_data();
         let url = filter.compose_url(&mut url);
-        let response = send_request!(url, method, self.auth_state);
+        let response = send_request_with_auth(url, method, &self.auth_state).await?;
         let string = response.text().await?;
-        let response: OrdersHistory = serde_json::from_str(&string)?;
-        Ok(response)
+        Ok(serde_json::from_str(&string)?)
     }
 
     pub async fn next_orders_history(&self, url: Url) -> Result<OrdersHistory, RichamsterError> {
-        let response = send_request!(url, reqwest::Method::GET, self.auth_state);
+        let response = send_request_with_auth(url, reqwest::Method::GET, &self.auth_state).await?;
         let string = response.text().await?;
-        let orders_history: OrdersHistory = serde_json::from_str(&string)?;
-        Ok(orders_history)
+        Ok(serde_json::from_str(&string)?)
     }
 
     pub async fn destroy_user_order(&self, id: i32) -> Result<(), RichamsterError> {
         let RequestData(mut url, method) = Api::Exchange(ExchangeApi::DestroyOrder).request_data();
         url = url.join(id.to_string().as_str())?;
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         match resp.status() {
             StatusCode::NO_CONTENT => Ok(()),
             StatusCode::UNAUTHORIZED => Err(RichamsterError::UnauthorizedAccess),
@@ -149,15 +158,20 @@ impl Exchange {
     ) -> Result<OrdersHistory, RichamsterError> {
         let RequestData(mut url, method) = Api::Exchange(ExchangeApi::UserOrders).request_data();
         let url = filter.compose_url(&mut url);
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         let string = resp.text().await?;
-        let response: OrdersHistory = serde_json::from_str(&string)?;
-        Ok(response)
+        Ok(serde_json::from_str(&string)?)
     }
 
     pub async fn create_order(&self, order: NewOrder) -> Result<NewOrder, RichamsterError> {
         let RequestData(url, method) = Api::Exchange(ExchangeApi::NewOrder).request_data();
-        let resp = send_request!(url, method, self.auth_state, serde_json::to_string(&order)?);
+        let resp = send_request_with_body_and_auth(
+            url,
+            method,
+            serde_json::to_string(&order)?,
+            &self.auth_state,
+        )
+        .await?;
 
         match resp.status() {
             StatusCode::CREATED => {
@@ -197,7 +211,7 @@ impl Exchange {
             total: None,
         };
         market_order.compose_url(&mut url);
-        let resp = send_request!(url, method, self.auth_state);
+        let resp = send_request_with_auth(url, method, &self.auth_state).await?;
         match resp.status() {
             StatusCode::CREATED | StatusCode::OK => {
                 let response_string = resp.text().await?;
@@ -237,12 +251,13 @@ impl Exchange {
             order_type,
             total,
         };
-        let resp = send_request!(
+        let resp = send_request_with_body_and_auth(
             url,
             method,
-            self.auth_state,
-            serde_json::to_string(&market_order)?
-        );
+            serde_json::to_string(&market_order)?,
+            &self.auth_state,
+        )
+        .await?;
         match resp.status() {
             StatusCode::CREATED | StatusCode::OK => {
                 let response_string = resp.text().await?;
