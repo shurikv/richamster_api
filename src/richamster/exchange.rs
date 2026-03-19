@@ -7,10 +7,10 @@ use crate::models::common::OrderType;
 use crate::models::exchange::{
     CurrencyInfoResponse, CurrencyPairRestriction, FavouritePairResponse, Market,
     MarketOrderCalculator, MarketOrderInfo, MarketOrderResponse, NewOrder, NewOrderError,
-    OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, TickerResponse,
+    OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, Ticker,
 };
 use crate::richamster::common::{
-    ApiKey, AuthState, JwtToken, SecretKey, process_response, send_request_with_auth,
+    ApiKey, AuthState, JwtToken, SecretKey, process_response, send_request, send_request_with_auth,
     send_request_with_body_and_auth,
 };
 use percent_encoding::percent_decode_str;
@@ -46,25 +46,20 @@ impl Exchange {
 impl Exchange {
     pub async fn restrictions_list(&self) -> Result<Vec<CurrencyPairRestriction>, RichamsterError> {
         let RequestData(url, method) = Api::Exchange(ExchangeApi::Restrictions).request_data();
-        Ok(send_request_with_auth(url, method, &self.auth_state)
-            .await?
-            .json()
-            .await?)
+        Ok(send_request(url, method).await?.json().await?)
     }
 
     pub async fn ticker_list(
         &self,
         pair: Option<CurrencyPair>,
-    ) -> Result<TickerResponse, RichamsterError> {
+    ) -> Result<Vec<Ticker>, RichamsterError> {
         let RequestData(mut url, method) = Api::Exchange(ExchangeApi::TickerList).request_data();
         if let Some(pair) = pair {
             url.query_pairs_mut()
                 .append_pair("pair", pair.to_string().as_str());
         }
-        Ok(send_request_with_auth(url, method, &self.auth_state)
-            .await?
-            .json()
-            .await?)
+        let response = send_request(url, method).await?;
+        process_response(response).await
     }
 
     async fn find_market(&self, pair: &CurrencyPair) -> Result<Market, RichamsterError> {

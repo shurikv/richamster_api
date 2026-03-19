@@ -70,12 +70,11 @@ pub struct TickerResponse {
 pub struct Ticker {
     pub pk: i32,
     pub pair: String,
-    pub last_price: String,
-    pub first_price: String,
-    pub high_price: Option<String>,
-    pub low_price: Option<String>,
-    pub base_volume: Option<String>,
-    pub quote_volume: Option<String>,
+    pub last: String,
+    pub first: String,
+    pub high: Option<String>,
+    pub low: Option<String>,
+    pub volume: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Debug)]
