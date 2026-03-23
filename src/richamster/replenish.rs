@@ -4,28 +4,18 @@ use crate::errors::RichamsterError;
 use crate::models::common::CurrencyChannel;
 use crate::models::replenish::{P2PReplenish, ReplenishInfo};
 use crate::richamster::common::{
-    ApiKey, AuthState, JwtToken, SecretKey, send_request_with_auth, send_request_with_body_and_auth,
+    ApiClient, AuthState, send_request_with_auth, send_request_with_body_and_auth,
 };
 use reqwest::StatusCode;
 
+#[derive(Default)]
 pub struct Replenish {
     auth_state: AuthState,
 }
 
-impl Replenish {
-    pub fn with_jwt_token(token: String) -> Self {
-        Self {
-            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
-        }
-    }
-
-    pub fn with_keys(api_key: String, secret_key: String) -> Self {
-        Self {
-            auth_state: AuthState::ApiSecretKeyAuth(
-                ApiKey::new(api_key),
-                SecretKey::new(secret_key),
-            ),
-        }
+impl ApiClient for Replenish {
+    fn from_auth_state(auth_state: AuthState) -> Self {
+        Self { auth_state }
     }
 }
 

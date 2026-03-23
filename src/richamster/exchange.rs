@@ -10,7 +10,7 @@ use crate::models::exchange::{
     OrderBookFilter, OrdersBook, OrdersFilter, OrdersHistory, Ticker,
 };
 use crate::richamster::common::{
-    ApiKey, AuthState, JwtToken, SecretKey, process_response, send_request, send_request_with_auth,
+    ApiClient, AuthState, process_response, send_request, send_request_with_auth,
     send_request_with_body_and_auth,
 };
 use percent_encoding::percent_decode_str;
@@ -22,24 +22,9 @@ pub struct Exchange {
     auth_state: AuthState,
 }
 
-impl Exchange {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn with_jwt_token(token: String) -> Self {
-        Self {
-            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
-        }
-    }
-
-    pub fn with_keys(api_key: String, secret_key: String) -> Self {
-        Self {
-            auth_state: AuthState::ApiSecretKeyAuth(
-                ApiKey::new(api_key),
-                SecretKey::new(secret_key),
-            ),
-        }
+impl ApiClient for Exchange {
+    fn from_auth_state(auth_state: AuthState) -> Self {
+        Self { auth_state }
     }
 }
 

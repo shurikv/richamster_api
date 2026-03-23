@@ -6,7 +6,7 @@ use crate::models::withdraw::{
     WithdrawResponse,
 };
 use crate::richamster::common::{
-    ApiKey, AuthState, JwtToken, SecretKey, send_request_with_auth, send_request_with_body_and_auth,
+    ApiClient, AuthState, send_request_with_auth, send_request_with_body_and_auth,
 };
 use reqwest::StatusCode;
 
@@ -15,24 +15,9 @@ pub struct Withdraw {
     auth_state: AuthState,
 }
 
-impl Withdraw {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn with_jwt_token(token: String) -> Self {
-        Self {
-            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
-        }
-    }
-
-    pub fn with_keys(api_key: String, secret_key: String) -> Self {
-        Self {
-            auth_state: AuthState::ApiSecretKeyAuth(
-                ApiKey::new(api_key),
-                SecretKey::new(secret_key),
-            ),
-        }
+impl ApiClient for Withdraw {
+    fn from_auth_state(auth_state: AuthState) -> Self {
+        Self { auth_state }
     }
 }
 

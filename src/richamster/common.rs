@@ -58,6 +58,33 @@ pub enum AuthState {
     JwtTokenWithApiSecretKeyAuth(JwtToken, ApiKey, SecretKey),
 }
 
+pub trait ApiClient: Default {
+    fn from_auth_state(auth_state: AuthState) -> Self;
+    fn new() -> Self {
+        Self::default()
+    }
+    fn with_jwt_token<I: Into<String>>(token: I) -> Self {
+        Self::from_auth_state(AuthState::JwtTokenAuth(JwtToken::new(token.into())))
+    }
+    fn with_keys<I: Into<String>>(api_key: I, secret_key: I) -> Self {
+        Self::from_auth_state(AuthState::ApiSecretKeyAuth(
+            ApiKey::new(api_key.into()),
+            SecretKey::new(secret_key.into()),
+        ))
+    }
+    fn with_jwt_and_keys(
+        jwt: impl Into<String>,
+        api_key: impl Into<String>,
+        secret_key: impl Into<String>,
+    ) -> Self {
+        Self::from_auth_state(AuthState::JwtTokenWithApiSecretKeyAuth(
+            JwtToken::new(jwt.into()),
+            ApiKey::new(api_key.into()),
+            SecretKey::new(secret_key.into()),
+        ))
+    }
+}
+
 pub trait HeaderCompose {
     fn compose(self, auth_state: &AuthState, payload: Option<&str>) -> RequestBuilder;
 }

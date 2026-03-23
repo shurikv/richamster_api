@@ -7,8 +7,7 @@ use crate::models::user::{
     UserOrdersFilter, UserTransactionResponse,
 };
 use crate::richamster::common::{
-    ApiKey, AuthState, JwtToken, SecretKey, process_response, send_request_with_auth,
-    send_request_with_body_and_auth,
+    ApiClient, AuthState, process_response, send_request_with_auth, send_request_with_body_and_auth,
 };
 
 #[derive(Default)]
@@ -16,34 +15,9 @@ pub struct User {
     auth_state: AuthState,
 }
 
-impl User {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn with_jwt_token(token: String) -> Self {
-        Self {
-            auth_state: AuthState::JwtTokenAuth(JwtToken::new(token)),
-        }
-    }
-
-    pub fn with_keys(api_key: String, secret_key: String) -> Self {
-        Self {
-            auth_state: AuthState::ApiSecretKeyAuth(
-                ApiKey::new(api_key),
-                SecretKey::new(secret_key),
-            ),
-        }
-    }
-
-    pub fn with_jwt_and_keys(jwt: String, api_key: String, secret_key: String) -> Self {
-        Self {
-            auth_state: AuthState::JwtTokenWithApiSecretKeyAuth(
-                JwtToken::new(jwt),
-                ApiKey::new(api_key),
-                SecretKey::new(secret_key),
-            ),
-        }
+impl ApiClient for User {
+    fn from_auth_state(auth_state: AuthState) -> Self {
+        Self { auth_state }
     }
 }
 
