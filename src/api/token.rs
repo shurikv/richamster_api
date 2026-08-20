@@ -20,7 +20,7 @@ use thiserror::Error;
 #[strum(ascii_case_insensitive)]
 pub enum Token {
     FSH,
-    TON,
+    GRAM,
     UAHT,
     AAVE,
     HCK,
